@@ -1,0 +1,25 @@
+# Lines to add via `crontab -e` (as the deploy user, NOT www-data — the
+# backup script reads a DB credentials file from $HOME which should be the
+# deploy user's). NOT installed anywhere by default.
+#
+# This project has no application-level scheduled jobs (no queue worker, no
+# `php artisan schedule:run` entry needed — see docs/DEPLOYMENT.md §6). These
+# two lines are the only scheduling this deployment needs: an off-app backup
+# and an off-app health probe, both of which are ordinary shell scripts,
+# not Laravel commands.
+
+# Nightly database + uploads backup, 03:00 server time.
+0 3 * * * BACKUP_DIR=/var/backups/sanad DB_NAME=sanad_platform_v2_production /var/www/sanad-teacher-all/backend/scripts/backup.sh >> /var/log/sanad-backup.log 2>&1
+
+# Health probe every 5 minutes. Redirect to /dev/null on success is handled
+# by the script's own exit code + cron's default "mail on any output"
+# behaviour — a healthy run prints one "OK: ..." line, which most cron setups
+# will still mail unless MAILTO="" is set below or output is silenced with
+# `>/dev/null`. Point ALERT_WEBHOOK_URL at a real incoming webhook to also get
+# a chat alert on failure, independent of whether cron's mail even works.
+*/5 * * * * HEALTH_URL=https://api.example.com/api/v1/health ALERT_WEBHOOK_URL=https://hooks.example.com/... /var/www/sanad-teacher-all/backend/scripts/health-check.sh >/dev/null
+
+# If you would rather not depend on cron's mail transport for the backup
+# script's own failures (missing ~/.my.cnf, mysqldump erroring, disk full),
+# pipe it through the same alerting path instead:
+#   0 3 * * * ... backup.sh || curl -s -X POST -H 'Content-Type: application/json' -d '{"text":"sanad backup FAILED"}' https://hooks.example.com/...

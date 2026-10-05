@@ -1,0 +1,42 @@
+# /etc/logrotate.d/sanad — NOT installed by default, copy this file there.
+#
+# Laravel's `daily` log driver (config/logging.php) already does two things
+# logrotate would otherwise be responsible for: it splits into one file per
+# day (app-YYYY-MM-DD.log, security-YYYY-MM-DD.log) and it DELETES files
+# older than the configured retention (LOG_DAILY_DAYS=30,
+# LOG_SECURITY_DAILY_DAYS=180 in .env.production.example) on its own, no cron
+# required. What it does NOT do is compress anything — every day's file sits
+# on disk uncompressed until Laravel itself deletes it. That is the one job
+# left for logrotate here.
+#
+# `copytruncate` and `create` are deliberately NOT used: the app opens and
+# appends to each day's file per write rather than holding a long-lived
+# handle, and the app creates the day's file itself the first time it logs —
+# logrotate does not need to create tomorrow's file for it.
+
+/var/www/sanad-teacher-all/backend/storage/logs/app-*.log {
+    daily
+    rotate 30
+    compress
+    delaycompress
+    missingok
+    notifempty
+    nocreate
+    su www-data www-data
+}
+
+# Kept separate with its own (longer) retention — an audit trail is usually
+# wanted for longer than routine app logs, and this stanza's `rotate` can be
+# raised independently without touching the app-*.log one above. Set higher
+# than LOG_SECURITY_DAILY_DAYS if you want compressed copies to outlive what
+# Laravel itself keeps uncompressed.
+/var/www/sanad-teacher-all/backend/storage/logs/security-*.log {
+    daily
+    rotate 180
+    compress
+    delaycompress
+    missingok
+    notifempty
+    nocreate
+    su www-data www-data
+}

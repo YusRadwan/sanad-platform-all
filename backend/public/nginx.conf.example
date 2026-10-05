@@ -1,0 +1,155 @@
+# Nginx + PHP-FPM server block for the SANAD Teacher platform backend.
+#
+# CURRENT AS OF the Laravel 12 rewrite (backend/composer.json: "sanad/backend-v2").
+# docs/DEPLOYMENT.md referenced this file before it existed; this is the file
+# it was describing, written to match the actual routes below rather than the
+# pre-rewrite (non-Laravel) backend the rest of that document was drafted
+# against — see the note at the top of docs/DEPLOYMENT.md.
+#
+# THE ROOT IS A SECURITY BOUNDARY, NOT A PREFERENCE.
+#
+#   root MUST be backend/public — never backend/, never one level up.
+#
+# backend/storage/uploads sits OUTSIDE backend/public, so Nginx physically
+# cannot reach an uploaded file by path. Every uploaded byte is read back
+# through PHP instead, after an access check runs
+# (backend/app/Http/Controllers/FileController.php):
+#
+#   GET /api/v1/files/{category}/{id}          — public imagery only
+#       (avatars, banners, course banners, question images, thumbnails),
+#       category checked against a visibility='public' allow-list.
+#   GET /api/v1/content-items/{id}/file         — private educational files.
+#       Requires auth AND an active subscription / ownership / admin.
+#
+# Point root at backend/ instead of backend/public and both checks become
+# bypassable by requesting /storage/uploads/... directly — a full regression
+# of the upload security design. The `location ~ ^/(storage|uploads)/` deny
+# block below is defence-in-depth for exactly that misconfiguration, not the
+# primary control (the primary control is the root itself).
+
+# ---------------------------------------------------------------------------
+# 1. Plain HTTP: redirect to HTTPS. Nothing else is served on :80.
+# ---------------------------------------------------------------------------
+server {
+    listen 80;
+    listen [::]:80;
+    server_name api.example.com;
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# ---------------------------------------------------------------------------
+# 2. HTTPS. Everything actually lives here.
+# ---------------------------------------------------------------------------
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name api.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/api.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/api.example.com/privkey.pem;
+
+    # A conservative, current baseline — not exhaustive TLS hardening.
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+    ssl_session_tickets off;
+
+    root /var/www/sanad-teacher-all/backend/public;
+    index index.php;
+    charset utf-8;
+
+    # Open decision 10.22 (see App\Actions\Upload\StoreUpload::handle()) is
+    # that this application deliberately enforces NO per-kind upload size
+    # limit — the only remaining ceiling is PHP's own upload_max_filesize /
+    # post_max_size. 200m here is a sane real-world ceiling for that decision
+    # (well above any course document/video thumbnail, far below the 2G this
+    # repo's local dev php.ini happens to allow) — raise it deliberately if a
+    # real deployment needs larger uploads, and keep upload_max_filesize /
+    # post_max_size in php.ini at least as large or this cap is moot: Nginx's
+    # 413 fires first only if its own limit is the smaller of the two.
+    client_max_body_size 200m;
+
+    # -----------------------------------------------------------------------
+    # Baseline security headers, repeated here even though
+    # App\Http\Middleware\SecurityHeaders already sets them on every response
+    # PHP produces. Nginx can generate a response PHP never sees — a raw
+    # static-file 404 from try_files, a TLS/large-body error before the
+    # request reaches PHP-FPM — and those must carry the same headers.
+    #
+    # `add_header` directives are NOT merged by Nginx — a `location` block
+    # that sets its own `add_header` silently DISCARDS every one inherited
+    # from here. If a location below ever adds a header, repeat all six
+    # there too, or move that location's rule to `add_header ... always;`
+    # at this level instead.
+    #
+    # Strict-Transport-Security is set here (not just in the Laravel
+    # middleware) so an HSTS-primed browser gets the header even on a
+    # request Nginx answers directly. 31536000s = 1 year, matching
+    # SecurityHeaders::HSTS_VALUE. `preload` is deliberately omitted — see
+    # that class's docblock for why it must stay a conscious, separate step.
+    # -----------------------------------------------------------------------
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;
+    add_header Content-Security-Policy "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" always;
+
+    # Never serve a dotfile (.env, .git, .htaccess) as static content.
+    location ~ /\. {
+        deny all;
+        return 404;
+    }
+
+    # Defence-in-depth only — see the root-boundary note above. This block
+    # should never actually match while root is correct, because
+    # storage/uploads is not under backend/public in the first place.
+    location ~ ^/(storage|uploads)/ {
+        deny all;
+        return 404;
+    }
+
+    # Health check: kept out of the access log so an uptime monitor polling
+    # every N seconds doesn't fill it with noise. See docs/DEPLOYMENT.md §9 —
+    # nothing calls this today; wiring an external monitor to it is what
+    # section 9 is asking a real deploy to do.
+    location = /api/v1/health {
+        access_log off;
+        try_files $uri /index.php?$query_string;
+    }
+
+    # Standard Laravel front-controller routing: serve a real static file if
+    # one exists (css/js/images under public/), otherwise hand everything to
+    # index.php so Laravel's router decides.
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param PATH_INFO $fastcgi_path_info;
+
+        # Tells PHP (and therefore Symfony/Laravel's Request::isSecure()) that
+        # this request arrived over TLS, WITHOUT needing Laravel's TrustProxies
+        # to trust anything — fastcgi_param is set by Nginx itself, inside this
+        # TLS-only server block, so there is no header a client could forge to
+        # fake it. This is what makes SecurityHeaders' conditional HSTS emit
+        # (`$request->isSecure()`) and SESSION_SECURE_COOKIE actually work.
+        fastcgi_param HTTPS on;
+
+        include fastcgi.conf;
+    }
+
+    # Never execute PHP inside the writable storage tree, even if root were
+    # ever misconfigured to expose it.
+    location ~ ^/storage/.*\.php$ {
+        deny all;
+        return 404;
+    }
+}

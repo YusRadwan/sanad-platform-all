@@ -1,0 +1,8 @@
+# Root-level ignores shared by the whole monorepo
+# Frontend and Backend have their own .gitignore for anything specific to them.
+
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

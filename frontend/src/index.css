@@ -1,0 +1,180 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;700;850;900&family=Inter:wght@300;400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap');
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+/* ===========================================================================
+ * SANAD DESIGN SYSTEM — design tokens (Tailwind v4 CSS-first `@theme`)
+ * ---------------------------------------------------------------------------
+ * DECISION: this is a REFINEMENT of the palette the codebase already uses, not
+ * a wholesale swap. Auditing Admin/* and Instructor/* showed a largely
+ * consistent language already in place:
+ *     primary   -> blue-600
+ *     neutrals  -> slate-*
+ *     success   -> emerald-*      danger -> rose-*
+ *     warning   -> amber-*        info   -> blue-*/sky-*
+ *     surfaces  -> rounded-2xl / rounded-3xl cards, shadow-sm, /60 borders
+ * Replacing that would have forced a rewrite of every one of the 33 pages in
+ * scope, which this session cannot verify. Instead the values are promoted to
+ * NAMED tokens so new work references intent (`bg-brand-600`, `text-danger`)
+ * while the hundreds of existing literal `blue-600`/`slate-*` classes keep
+ * rendering byte-identically. Migration can then happen page by page with no
+ * visual diff at any step.
+ *
+ * Every token below is an ALIAS of an existing Tailwind palette value — no new
+ * hues are introduced.
+ * ========================================================================= */
+@theme {
+  --font-sans: "Cairo", "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  /* Homepage-only font (see `.font-tajawal` below / PublicHomeRoute.tsx) —
+     the rest of the app (Instructor/Admin dashboards, auth pages) keeps
+     Cairo untouched. */
+  --font-tajawal: "Tajawal", "Cairo", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --animate-shimmer: shimmer 2.5s infinite;
+
+  /* --- Brand ramp (= Tailwind blue, the platform's established primary) ---
+     Used for: primary buttons, active nav item, focus rings, links.
+     Aliased via var() to the built-in blue ramp rather than hand-copied oklch
+     literals, so brand-600 is GUARANTEED to be the exact same colour as the
+     blue-600 already hard-coded across the app - no drift is possible. */
+  --color-brand-50:  var(--color-blue-50);
+  --color-brand-100: var(--color-blue-100);
+  --color-brand-200: var(--color-blue-200);
+  --color-brand-300: var(--color-blue-300);
+  --color-brand-400: var(--color-blue-400);
+  --color-brand-500: var(--color-blue-500);
+  --color-brand-600: var(--color-blue-600);
+  --color-brand-700: var(--color-blue-700);
+  --color-brand-800: var(--color-blue-800);
+  --color-brand-900: var(--color-blue-900);
+
+  /* --- Semantic single-stop aliases -------------------------------------
+     For text/icon tint where a full ramp is overkill. The matching surface
+     tints stay as the existing `emerald-50`/`rose-50`/... utilities. */
+  --color-success: var(--color-emerald-600);
+  --color-danger:  var(--color-rose-600);
+  --color-warning: var(--color-amber-600);
+  --color-info:    var(--color-sky-600);
+
+  /* --- Radius scale ------------------------------------------------------
+     Formalises what is already in use. Direction-agnostic, so RTL-safe.
+       control = buttons / inputs / badges   (rounded-xl,  0.75rem)
+       card    = panels, cards, modals       (rounded-2xl, 1rem)
+       panel   = large hero/section surfaces (rounded-3xl, 1.5rem) */
+  --radius-control: 0.75rem;
+  --radius-card: 1rem;
+  --radius-panel: 1.5rem;
+
+  /* --- Elevation --------------------------------------------------------
+     Deliberately shallow: this is a dense data dashboard, not a marketing
+     page. Level 1 = resting card, 2 = hover/raised, 3 = overlay/popover. */
+  --shadow-e1: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+  --shadow-e2: 0 4px 12px -2px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.04);
+  --shadow-e3: 0 12px 32px -8px rgb(15 23 42 / 0.16), 0 4px 8px -4px rgb(15 23 42 / 0.06);
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * TYPOGRAPHY CONVENTION (documented, not enforced by CSS)
+ * The codebase mixes font-black/font-bold arbitrarily. From here on:
+ *   font-black (900) — numbers, KPI values, page titles, active nav labels
+ *   font-bold  (700) — form labels, table headers, buttons, body emphasis
+ *   font-medium(500) — table cell body text, helper/secondary copy
+ *   font-normal(400) — long-form paragraphs
+ * Type scale in use: text-[10px]/[11px] micro-labels, text-xs table+nav,
+ * text-sm body, text-base/lg section titles, text-xl..3xl page titles & KPIs.
+ * ------------------------------------------------------------------------ */
+
+html {
+  scroll-behavior: smooth;
+  /* Decorative absolutely-positioned background blobs (used across nearly
+     every admin/instructor/public page) are sized and offset (`w-[Npx]`,
+     `-left-*`, `right-1/4`, …) relative to their own section, not the
+     viewport — in this RTL document that reliably pushes real, scrollable
+     horizontal overflow past both edges on narrow/medium screens, even
+     though every offending element is `pointer-events-none` and invisible.
+     A global clip is the correct fix (not `overflow: hidden` per element):
+     it guarantees no page can ever gain real horizontal scroll room no
+     matter which component adds the next oversized decorative glow, without
+     touching `position: fixed`/`sticky` behavour anywhere (`overflow` on
+     html/body does not change the containing block for fixed descendants). */
+  overflow-x: clip;
+}
+
+body {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+
+/* Plain, unlayered re-declaration: the custom @theme block above does not
+   compile through this project's CSS toolchain (it silently drops the
+   --font-sans override and the brand-new --font-tajawal key), so this
+   supplies the real runtime values. .font-tajawal is hand-written since
+   Tailwind never auto-generates it from the dropped @theme entry. */
+:root {
+  --font-sans: "Cairo", "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-tajawal: "Tajawal", "Cairo", ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+.font-tajawal,
+.font-tajawal * {
+  font-family: var(--font-tajawal);
+}
+
+/* Respect prefers-reduced-motion for every plain-CSS animation/transition in
+   the app (Tailwind's `transition-*`, `animate-pulse`, `animate-spin`, the
+   `shimmer` keyframe above, etc). Framer Motion (`motion/react`) components
+   are a SEPARATE animation system this rule cannot reach — those are covered
+   instead by wrapping the homepage in `<MotionConfig reducedMotion="user">`
+   (see PublicHomeRoute.tsx), which is Motion's own equivalent of this same
+   guarantee. Near-zero duration rather than `none` on the transition
+   properties specifically: some components rely on a transition's `end`
+   event firing (e.g. a value that must still reach its final state) — killing
+   duration outright can leave those stuck mid-transition, whereas an
+   effectively-instant one still fires normally. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Sidebar scrollbar — the drawer/rail's own nav column (Sidebar.tsx's
+   `.sidebar-scroll` container), not a site-wide override. The default
+   platform scrollbar (a wide grey OS-themed bar) reads as a foreign control
+   dropped onto the blue-600/slate-950 panel; this replaces it with a thin,
+   translucent-white track that recedes into the panel's own surface in both
+   themes, since the panel itself already switches colour, not the scrollbar. */
+.sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.28);
+  border-radius: 9999px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.45);
+}
+

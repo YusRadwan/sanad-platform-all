@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+    </source>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_DEBUG" value="false"/>
+        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="CACHE_STORE" value="array"/>
+
+        <!--
+            Tests run against the REAL MySQL schema, not sqlite:memory.
+
+            The whole point of this stage's test suite is to prove that MySQL
+            CHECK constraints fire, that ENUM values are enforced, that FK
+            ON DELETE rules behave, and that TINYINT/DECIMAL come back as the
+            PHP types the frontend's TypeScript expects. None of that is
+            testable against sqlite, which has no ENUM, ignores most of this
+            schema's DDL, and has entirely different type affinity.
+
+            sanad_platform_v2_test is a SEPARATE database from the development
+            one so that a RefreshDatabase run never wipes seeded dev data —
+            and, critically, it is nowhere near backend/'s sanad_platform_test.
+        -->
+        <env name="DB_CONNECTION" value="mysql"/>
+        <env name="DB_DATABASE" value="sanad_platform_v2_test"/>
+
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+
+        <!-- The seeder refuses to run without one; tests need it deterministic. -->
+        <env name="SEED_ADMIN_PASSWORD" value="TestOnlyPassword123!"/>
+
+        <!-- Exercised by the CORS test. -->
+        <env name="CORS_ALLOWED_ORIGINS" value="http://localhost:5173,https://app.sanad.test"/>
+    </php>
+</phpunit>

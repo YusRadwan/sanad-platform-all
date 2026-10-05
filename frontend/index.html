@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!--
+      Every static brand asset lives in frontend/public/branding — exactly two
+      PNG files, /branding/logo.png and /branding/favicon.png. Vite copies
+      public/ verbatim into dist/, so these absolute paths resolve identically
+      in dev and in a production build.
+
+      They replace the settings-driven logo upload that used to live in the
+      admin "إعدادات المنصة" page. That tab stored the image as a base64 data
+      URL under the `platform_logo` settings key, which index.html could never
+      reference at all (this file is static and has no API access) — so the
+      browser tab had no icon whatsoever before this.
+
+      PNG rather than SVG, and one folder rather than four scattered files at
+      the public/ root: the previous logo.svg / favicon.svg / og-image.svg were
+      byte-for-byte identical copies of the same artwork, so a rebrand silently
+      left stale copies behind. The logo doubles as the social preview image —
+      there is no separate og-image any more.
+
+      To rebrand, replace the two files themselves; no code change is needed.
+    -->
+    <link rel="icon" type="image/png" href="/branding/favicon.png" />
+    <link rel="apple-touch-icon" href="/branding/logo.png" />
+
+    <meta name="description" content="سند - منصة تعليمية" />
+    <meta property="og:title" content="سند - منصة تعليمية" />
+    <meta property="og:description" content="سند - منصة تعليمية" />
+    <meta property="og:image" content="/branding/logo.png" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:image" content="/branding/logo.png" />
+
+    <title>سند - منصة تعليمية</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

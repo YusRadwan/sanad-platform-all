@@ -1,0 +1,31 @@
+# This directory (and its avatars/, banners/, images/, documents/
+# subdirectories, which inherit these rules) is OUTSIDE the web-server document
+# root -- backend/public is the root, see public/.htaccess. Apache therefore has
+# no URL that maps here at all, and this file should never actually be consulted.
+#
+# It is kept as defence in depth for the one scenario that would matter: a
+# deployment that mistakenly points the document root at backend/ or at the
+# project root instead of backend/public. In that case these rules still stop a
+# renamed or maliciously placed script from being executed.
+#
+# The real control is that every read goes through PHP
+# (app/Services/FileService.php + app/Http/Controllers/FileController.php), so
+# an authorization decision precedes any byte leaving this directory:
+#   GET /api/v1/files/{category}/{uuid}  -> public imagery (avatars, banners,
+#                                           images), unauthenticated by design
+#   GET /api/v1/content-items/{id}/file  -> private documents, requires an
+#                                           active subscription / ownership
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<FilesMatch "\.(php|php\d|phtml|pl|py|cgi|asp|aspx|sh|exe|svg|html?|htaccess)$">
+    Require all denied
+</FilesMatch>
+Options -ExecCGI
+AddHandler cgi-script .php .php3 .php4 .php5 .php7 .phtml .pl .py .cgi .asp .aspx .sh .exe
+
+# Never let the server infer an active content type from a filename here.
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Content-Security-Policy "default-src 'none'; sandbox"
+</IfModule>
