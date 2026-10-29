@@ -34,15 +34,14 @@ final class RateLimitTest extends TestCase
         ]);
     }
 
-    public function test_the_sixth_login_attempt_in_a_minute_is_429(): void
+    public function test_the_twenty_first_login_attempt_in_a_minute_is_429(): void
     {
         $this->makeUser(['username' => 'victim']);
 
-        // login bucket: max_attempts 5 per 60 s.
-        for ($i = 1; $i <= 5; $i++) {
+        // login bucket: max_attempts 20 per 60 s.
+        for ($i = 1; $i <= 20; $i++) {
             $this->attemptLogin()->assertStatus(401);
         }
-
         $this->attemptLogin()->assertStatus(429);
     }
 
@@ -55,9 +54,9 @@ final class RateLimitTest extends TestCase
     {
         $this->makeUser(['username' => 'victim']);
 
-        for ($i = 1; $i <= 5; $i++) {
+        for ($i = 1; $i <= 20; $i++) {
             $this->attemptLogin();
-        }
+	}
 
         $response = $this->attemptLogin();
 
@@ -76,7 +75,7 @@ final class RateLimitTest extends TestCase
 
     /**
      * ┌──────────────────────────────────────────────────────────────────────┐
-     * │ THE ESCALATION ITSELF — what Laravel's own limiter cannot do.        │
+     *   THE ESCALATION ITSELF — what Laravel's own limiter cannot do.        │
      * │ First offence 300 s, second 600 s, third 900 s (lockout × strikes),  │
      * │ capped at max_lockout_seconds.                                       │
      * └──────────────────────────────────────────────────────────────────────┘
@@ -112,7 +111,7 @@ final class RateLimitTest extends TestCase
      */
     private function burnThroughOneLockout(): int
     {
-        for ($i = 1; $i <= 5; $i++) {
+        for ($i = 1; $i <= 20; $i++) {
             $this->attemptLogin();
         }
 

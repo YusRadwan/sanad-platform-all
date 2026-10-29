@@ -107,7 +107,7 @@ for the full reasoning.
 
 ### Nginx + PHP-FPM server block
 
-**`backend/public/nginx.conf.example`** is the canonical, current example —
+**`docs/deployment/nginx.conf.example`** is the canonical, current example —
 copy it rather than re-deriving one. It already contains: the correct `root`,
 `try_files` to the front controller, `fastcgi_pass` to
 `unix:/run/php/php8.3-fpm.sock`, the plain-HTTP→HTTPS redirect, the TLS server
