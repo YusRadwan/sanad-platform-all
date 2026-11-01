@@ -1,0 +1,141 @@
+
+name: Deploy Sanad to Hostinger
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Select branch to deploy"
+        required: true
+        type: choice
+        options:
+          - main
+          - test/video-providers
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sanad-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout selected branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Verify build
+        run: |
+          test -f frontend/dist/index.html
+          test -d frontend/dist/assets
+          echo "BUILD_VERIFIED"
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+          ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null
+
+      - name: Create remote backup
+        env:
+          SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \
+            "$SSH_USER@$SSH_HOST" \
+            'set -e
+             mkdir -p ~/sanad-backups
+             BACKUP=~/sanad-backups/public_html-$(date +%Y%m%d-%H%M%S).tar.gz
+             tar -czf "$BACKUP" -C ~/domains/orchid-gerbil-115887.hostingersite.com public_html
+             echo "BACKUP_CREATED:$BACKUP"'
+
+      - name: Upload release package
+        env:
+          SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+        run: |
+          RELEASE="sanad-release-${GITHUB_RUN_ID}"
+
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \
+            "$SSH_USER@$SSH_HOST" \
+            "mkdir -p ~/$RELEASE"
+
+          scp -i ~/.ssh/deploy_key -P "$SSH_PORT" -r \
+            frontend/dist/. \
+            "$SSH_USER@$SSH_HOST:~/$RELEASE/"
+
+      - name: Deploy frontend
+        env:
+          SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+        run: |
+          RELEASE="sanad-release-${GITHUB_RUN_ID}"
+
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \
+            "$SSH_USER@$SSH_HOST" \
+            "set -e
+             ROOT=~/domains/orchid-gerbil-115887.hostingersite.com/public_html
+             DIST=~/$RELEASE
+
+             mkdir -p \"\$ROOT/assets\"
+
+             cp -a \"\$DIST/assets/.\" \"\$ROOT/assets/\"
+
+             if [ -d \"\$DIST/branding\" ]; then
+               mkdir -p \"\$ROOT/branding\"
+               cp -a \"\$DIST/branding/.\" \"\$ROOT/branding/\"
+             fi
+
+             cp \"\$DIST/index.html\" \"\$ROOT/index.html\"
+
+             echo DEPLOY_FILES_UPDATED
+             "
+
+      - name: Smoke test
+        run: |
+          SITE="https://orchid-gerbil-115887.hostingersite.com"
+
+          for attempt in 1 2 3 4 5; do
+            if curl -fsS "$SITE/" -o /tmp/sanad-index.html; then
+              grep -q '<html' /tmp/sanad-index.html
+              echo "SITE_HTTP_OK"
+              exit 0
+            fi
+            sleep 5
+          done
+
+          echo "SMOKE_TEST_FAILED"
+          exit 1
