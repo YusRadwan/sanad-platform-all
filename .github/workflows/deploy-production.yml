@@ -1,4 +1,3 @@
-
 name: Deploy Sanad to Hostinger
 
 on:
@@ -46,7 +45,7 @@ jobs:
 
       - name: Verify build
         run: |
-          test -f frontend/dist/index.html
+          test -s frontend/dist/index.html
           test -d frontend/dist/assets
           echo "BUILD_VERIFIED"
 
@@ -57,28 +56,32 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-
-          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/deploy_key
+          printf '%s\\n' "$SSH_PRIVATE_KEY" | tr -d '\\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-
-          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
-
           ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null
 
       - name: Create remote backup
+        id: backup
         env:
           SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
           SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
           SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
         run: |
-          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \
+          BACKUP_PATH=$(ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \
             "$SSH_USER@$SSH_HOST" \
             'set -e
-             mkdir -p ~/sanad-backups
-             BACKUP=~/sanad-backups/public_html-$(date +%Y%m%d-%H%M%S).tar.gz
-             tar -czf "$BACKUP" -C ~/domains/orchid-gerbil-115887.hostingersite.com public_html
-             echo "BACKUP_CREATED:$BACKUP"'
+             mkdir -p "$HOME/sanad-backups"
+             BACKUP="$HOME/sanad-backups/public_html-before-${GITHUB_RUN_ID}.tar.gz"
+             tar -czf "$BACKUP" -C "$HOME/domains/orchid-gerbil-115887.hostingersite.com" public_html
+             printf "%s" "$BACKUP"')
+          test -n "$BACKUP_PATH"
+          echo "backup_path=$BACKUP_PATH" >> "$GITHUB_OUTPUT"
+          echo "REMOTE_BACKUP_CREATED"
+
+      - name: Package frontend
+        run: tar -czf "/tmp/sanad-dist-${GITHUB_RUN_ID}.tar.gz" -C frontend/dist .
 
       - name: Upload release package
         env:
@@ -87,14 +90,12 @@ jobs:
           SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
         run: |
           RELEASE="sanad-release-${GITHUB_RUN_ID}"
-
-          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \
-            "$SSH_USER@$SSH_HOST" \
-            "mkdir -p ~/$RELEASE"
-
-          scp -i ~/.ssh/deploy_key -P "$SSH_PORT" -r \
-            frontend/dist/. \
-            "$SSH_USER@$SSH_HOST:~/$RELEASE/"
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "mkdir -p \"~/$RELEASE\""
+          scp -i ~/.ssh/deploy_key -P "$SSH_PORT" \
+            "/tmp/sanad-dist-${GITHUB_RUN_ID}.tar.gz" \
+            "$SSH_USER@$SSH_HOST:~/$RELEASE/dist.tar.gz"
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "tar -xzf ~/$RELEASE/dist.tar.gz -C ~/$RELEASE"
 
       - name: Deploy frontend
         env:
@@ -103,39 +104,62 @@ jobs:
           SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
         run: |
           RELEASE="sanad-release-${GITHUB_RUN_ID}"
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "bash -s -- '$RELEASE'" <<'REMOTE'
+          set -e
+          RELEASE="$1"
+          ROOT="$HOME/domains/orchid-gerbil-115887.hostingersite.com/public_html"
+          DIST="$HOME/$RELEASE"
 
-          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \
-            "$SSH_USER@$SSH_HOST" \
-            "set -e
-             ROOT=~/domains/orchid-gerbil-115887.hostingersite.com/public_html
-             DIST=~/$RELEASE
+          test -s "$DIST/index.html"
+          test -d "$DIST/assets"
+          mkdir -p "$ROOT/assets"
+          cp -a "$DIST/assets/." "$ROOT/assets/"
 
-             mkdir -p \"\$ROOT/assets\"
+          if [ -d "$DIST/branding" ]; then
+            mkdir -p "$ROOT/branding"
+            cp -a "$DIST/branding/." "$ROOT/branding/"
+          fi
 
-             cp -a \"\$DIST/assets/.\" \"\$ROOT/assets/\"
-
-             if [ -d \"\$DIST/branding\" ]; then
-               mkdir -p \"\$ROOT/branding\"
-               cp -a \"\$DIST/branding/.\" \"\$ROOT/branding/\"
-             fi
-
-             cp \"\$DIST/index.html\" \"\$ROOT/index.html\"
-
-             echo DEPLOY_FILES_UPDATED
-             "
+          # Publish the new entry point last.
+          cp "$DIST/index.html" "$ROOT/index.html"
+          echo DEPLOY_FILES_UPDATED
+          REMOTE
 
       - name: Smoke test
+        id: smoke
         run: |
           SITE="https://orchid-gerbil-115887.hostingersite.com"
-
           for attempt in 1 2 3 4 5; do
-            if curl -fsS "$SITE/" -o /tmp/sanad-index.html; then
-              grep -q '<html' /tmp/sanad-index.html
+            if curl -fsS "$SITE/" -o /tmp/sanad-index.html &&
+               grep -qi '<html' /tmp/sanad-index.html; then
               echo "SITE_HTTP_OK"
               exit 0
             fi
             sleep 5
           done
-
           echo "SMOKE_TEST_FAILED"
           exit 1
+
+      - name: Roll back public_html on failure
+        if: failure() && steps.backup.outputs.backup_path != ''
+        env:
+          SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          BACKUP_PATH: ${{ steps.backup.outputs.backup_path }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "set -e
+             tar -xzf '$BACKUP_PATH' -C \"$HOME/domains/orchid-gerbil-115887.hostingersite.com\"
+             echo ROLLBACK_COMPLETED"
+
+      - name: Clean up uploaded release
+        if: always()
+        env:
+          SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+        run: |
+          RELEASE="sanad-release-${GITHUB_RUN_ID}"
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "rm -rf \"$HOME/$RELEASE\"" || true
