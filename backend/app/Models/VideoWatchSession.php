@@ -46,8 +46,8 @@ class VideoWatchSession extends BaseModel
                 (id, student_id, content_item_id, session_key, watched_seconds, started_at, last_activity_at)
              VALUES (?, ?, ?, ?, ?, NOW(), NOW())
              ON DUPLICATE KEY UPDATE
-                watched_seconds = GREATEST(watched_seconds, VALUES(watched_seconds)),
-                last_activity_at = IF(VALUES(watched_seconds) > watched_seconds, NOW(), last_activity_at)',
+                last_activity_at = IF(VALUES(watched_seconds) > watched_seconds, NOW(), last_activity_at),
+                watched_seconds = GREATEST(watched_seconds, VALUES(watched_seconds))',
             [(string) Str::uuid7(), $studentId, $contentItemId, $sessionKey, $watchedSeconds]
         );
     }
