@@ -386,7 +386,7 @@ export default function VideoManagement({ courses = [] }: VideoManagementProps) 
     if (selectedVideo) {
       setEditTitle(selectedVideo.title);
       setEditDescription(selectedVideo.description || '');
-      setEditDuration(selectedVideo.duration !== undefined ? String(selectedVideo.duration) : '');
+      setEditDuration(selectedVideo.duration !== undefined ? String(Math.round(Number(selectedVideo.duration) / 60)) : '');
       setEditProvider((selectedVideo.provider as "YouTube" | "Vimeo" | "Bunny") || 'YouTube');
       setEditUrl(selectedVideo.url || '');
       setEditThumbnailUrl(selectedVideo.thumbnailUrl || '');
@@ -517,7 +517,7 @@ export default function VideoManagement({ courses = [] }: VideoManagementProps) 
         description: addDescription.trim(),
         url: addUrl.trim(),
         provider: addProvider,
-        duration: Number(addDuration.trim()),
+        // The form accepts minutes; the API and videos table store seconds.\n        duration: Math.round(Number(addDuration.trim()) * 60),
         thumbnailUrl,
         isFree: addIsFree,
         startDate: addStartDate || undefined,
@@ -572,7 +572,7 @@ export default function VideoManagement({ courses = [] }: VideoManagementProps) 
         description: editDescription.trim(),
         url: editUrl.trim(),
         provider: editProvider,
-        duration: Number(editDuration.trim()),
+        // The form accepts minutes; the API and videos table store seconds.\n        duration: Math.round(Number(editDuration.trim()) * 60),
         thumbnailUrl,
         isFree: editIsFree,
         startDate: editStartDate || undefined,
@@ -1416,7 +1416,7 @@ export default function VideoManagement({ courses = [] }: VideoManagementProps) 
                   <div className="p-6 rounded-panel border border-rose-200 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-950/20 mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="space-y-1 text-center sm:text-right min-w-0">
                       <h4 className="text-base font-black text-slate-900 dark:text-white">{selectedVideoToDelete.title}</h4>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 font-bold">المزود: {selectedVideoToDelete.provider} • المدة: {selectedVideoToDelete.duration} دقيقة</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 font-bold">المزود: {selectedVideoToDelete.provider} • المدة: {Math.round(Number(selectedVideoToDelete.duration || 0) / 60)} دقيقة</p>
                     </div>
 
                     {!showDeleteConfirm ? (
