@@ -53,6 +53,27 @@ function loadVimeoApi(): Promise<void> {
   });
 }
 
+/** Bunny Stream exposes its iframe through the Player.js protocol. */
+function loadBunnyPlayerApi(): Promise<void> {
+  const w = window as any;
+  if (w.playerjs?.Player) return Promise.resolve();
+
+  return new Promise((resolve, reject) => {
+    const existing = document.getElementById('bunny-playerjs-api') as HTMLScriptElement | null;
+    if (existing) {
+      existing.addEventListener('load', () => resolve(), { once: true });
+      existing.addEventListener('error', () => reject(new Error('Bunny Player.js failed to load')), { once: true });
+      return;
+    }
+    const tag = document.createElement('script');
+    tag.id = 'bunny-playerjs-api';
+    tag.src = 'https://assets.mediadelivery.net/playerjs/player-0.1.0.min.js';
+    tag.onload = () => resolve();
+    tag.onerror = () => reject(new Error('Bunny Player.js failed to load'));
+    document.head.appendChild(tag);
+  });
+}
+
 /** Seconds -> always display hours, minutes, and seconds (HH:MM:SS). */
 function formatDuration(totalSeconds: number): string {
   const seconds = Math.max(0, Math.round(totalSeconds));
@@ -69,6 +90,7 @@ export default function VideoPlayerPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const youtubeContainerRef = useRef<HTMLDivElement>(null);
   const vimeoIframeRef = useRef<HTMLIFrameElement>(null);
+  const bunnyIframeRef = useRef<HTMLIFrameElement>(null);
   const playerWrapperRef = useRef<HTMLDivElement>(null);
   const isSavingRef = useRef(false);
   const lastSavedRef = useRef<number>(0);
@@ -335,6 +357,39 @@ export default function VideoPlayerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [embed?.kind, videoId, loading]);
 
+  // Bunny Stream uses Player.js for cross-origin iframe playback events.
+  useEffect(() => {
+    if (embed?.kind !== 'bunny-iframe' || loading || !bunnyIframeRef.current) return;
+
+    let player: any;
+    let cancelled = false;
+
+    loadBunnyPlayerApi().then(() => {
+      if (cancelled || !bunnyIframeRef.current) return;
+      const PlayerJs = (window as any).playerjs;
+      if (!PlayerJs?.Player) return;
+
+      player = new PlayerJs.Player(bunnyIframeRef.current);
+      player.on('ready', () => {
+        if (cancelled) return;
+        player.on('play', () => startWatchSession());
+        player.on('pause', () => stopWatchSession());
+        player.on('ended', () => stopWatchSession());
+      });
+    }).catch((err) => {
+      logger.warn('Bunny player analytics could not be initialized', err);
+    });
+
+    return () => {
+      cancelled = true;
+      stopWatchSession();
+      player?.off?.('play');
+      player?.off?.('pause');
+      player?.off?.('ended');
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [embed?.kind, videoId, loading]);
+
   // A guaranteed fullscreen affordance regardless of embed kind: native
   // <video> controls and the YouTube/Vimeo/Bunny iframes each rely on their
   // own provider's fullscreen icon (which can be hidden/disabled by the
@@ -419,14 +474,10 @@ export default function VideoPlayerPage() {
               allowFullScreen
             />
           ) : embed?.kind === 'bunny-iframe' ? (
-            // Plays correctly (Bunny Stream's iframe embed is self-contained,
-            // same as YouTube/Vimeo's), but progress is NOT tracked here —
-            // unlike YouTube/Vimeo, Bunny's iframe postMessage API isn't
-            // wired up (no Bunny account/library available to verify it
-            // against). A lesson added as a direct Bunny CDN media URL
-            // instead of this iframe embed uses the native <video> path
-            // below and gets full progress tracking as normal.
+            // Bunny Stream's Player.js bridge supplies play/pause/ended events
+            // for accurate watch-session timing across the iframe boundary.
             <iframe
+              ref={bunnyIframeRef}
               src={safeUrl(embed.src)}
               title={videoData?.title || 'فيديو'}
               className="w-full h-full border-0 absolute inset-0"
