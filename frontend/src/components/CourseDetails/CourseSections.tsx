@@ -2,6 +2,15 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router';
 import { PlayCircle, FileText, Lock, ExternalLink, Download, Award, Presentation } from 'lucide-react';
 
+const formatVideoDuration = (totalSeconds: number): string => {
+  const seconds = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = seconds % 60;
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${pad(hours)}:${pad(minutes)}:${pad(remainingSeconds)}`;
+};
+
 export default function CourseSections({
   course,
   hasAccess,
@@ -199,6 +208,13 @@ export default function CourseSections({
                                 break;
                             }
 
+                            const matchingVideo = item.type === 'video'
+                              ? globalVideos.find((v: any) =>
+                                  v.id === item.id ||
+                                  (v.courseId === course.id && v.title === item.title)
+                                )
+                              : null;
+                            const videoDuration = Number(matchingVideo?.duration || item.duration || 0);
                             const isItemFreeVideo = item.type === 'video' && globalVideos.some((v: any) => v.courseId === course.id && v.title === item.title && v.isFree);
                             const itemHasAccess = hasAccess || (isItemFreeVideo && loggedIn);
 
@@ -247,6 +263,12 @@ export default function CourseSections({
                                     {item.description && (
                                       <span className="text-xs sm:text-sm font-semibold text-slate-400 dark:text-slate-500 block leading-relaxed">
                                         {item.description}
+                                      </span>
+                                    )}
+                                    {item.type === 'video' && videoDuration > 0 && (
+                                      <span className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-lg">
+                                        <PlayCircle className="w-3.5 h-3.5" />
+                                        مدة الفيديو: {formatVideoDuration(videoDuration)}
                                       </span>
                                     )}
                                   </div>
