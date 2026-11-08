@@ -155,7 +155,7 @@ export default function VideoPlayerPage() {
   }, [videoId]);
 
   const flushWatchSession = () => {
-    if (!videoId || !watchSessionKeyRef.current || watchedSecondsRef.current <= 0) return;
+    if (!videoId || !watchSessionKeyRef.current) return;
     courseService.saveVideoWatchSession(
       videoId,
       watchSessionKeyRef.current,
@@ -182,6 +182,8 @@ export default function VideoPlayerPage() {
     if (playbackActiveRef.current) return;
     playbackActiveRef.current = true;
     lastWatchTickRef.current = Date.now();
+    // Create the session immediately so started_at reflects the actual open.
+    flushWatchSession();
   };
 
   const stopWatchSession = () => {
