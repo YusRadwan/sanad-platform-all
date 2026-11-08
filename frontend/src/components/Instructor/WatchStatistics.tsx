@@ -289,7 +289,7 @@ export default function WatchStatistics() {
             disabled={!selectedVideoId || loadingReport || !report}
             onClick={() => setShowSessionDetails((value) => !value)}
           >
-            {showSessionDetails ? 'إخفاء تفاصيل الجلسات' : 'تفاصيل جلسات المشاهدة'}
+            {showSessionDetails ? 'إخفاء الإحصائيات' : 'إحصائيات الفيديو'}
           </Button>
         }
       />
