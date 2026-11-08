@@ -946,6 +946,8 @@ Route::prefix('v1')->group(function (): void {
             ->name('lessons.progress.show');
         Route::post('/lessons/{id}/progress', [LessonController::class, 'saveProgress'])
             ->name('lessons.progress.store');
+        Route::post('/lessons/{id}/watch-sessions', [LessonController::class, 'recordWatchSession'])
+            ->name('lessons.watch-sessions.store');
     });
 
     /*
