@@ -46,7 +46,7 @@ const joinDuration = (hours: string, minutes: string, seconds: string) =>
   Math.max(0, Number(seconds) || 0);
 
 const isValidDurationPart = (value: string) =>
-  value.trim() === '' || (/^\\d+$/.test(value) && Number(value) <= 59);
+  value.trim() === '' || (/^\d+$/.test(value) && Number(value) <= 59);
 
 interface ActionDef {
   id: VideoAction;
@@ -832,14 +832,14 @@ export default function VideoManagement({ courses = [] }: VideoManagementProps) 
                       <div className="md:col-span-2">
                         <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">مدة الفيديو</label>
                         <div className="grid grid-cols-3 gap-3" dir="rtl">
-                          <FormField required label="ساعات">
-                            {({ id }) => <Input id={id} size="lg" type="number" min="0" value={addDurationHours} onChange={(e) => setAddDurationHours(e.target.value)} placeholder="0" className="font-bold text-center" dir="ltr" required />}
+                          <FormField label="ساعات">
+                            {({ id }) => <Input id={id} size="lg" type="number" min="0" value={addDurationHours} onChange={(e) => setAddDurationHours(e.target.value)} placeholder="0" className="font-bold text-center" dir="ltr" />}
                           </FormField>
-                          <FormField required label="دقائق">
-                            {({ id }) => <Input id={id} size="lg" type="number" min="0" max="59" value={addDurationMinutes} onChange={(e) => setAddDurationMinutes(e.target.value)} placeholder="0" className="font-bold text-center" dir="ltr" required />}
+                          <FormField label="دقائق">
+                            {({ id }) => <Input id={id} size="lg" type="number" min="0" max="59" value={addDurationMinutes} onChange={(e) => setAddDurationMinutes(e.target.value)} placeholder="0" className="font-bold text-center" dir="ltr" />}
                           </FormField>
-                          <FormField required label="ثواني">
-                            {({ id }) => <Input id={id} size="lg" type="number" min="0" max="59" value={addDurationSeconds} onChange={(e) => setAddDurationSeconds(e.target.value)} placeholder="0" className="font-bold text-center" dir="ltr" required />}
+                          <FormField label="ثواني">
+                            {({ id }) => <Input id={id} size="lg" type="number" min="0" max="59" value={addDurationSeconds} onChange={(e) => setAddDurationSeconds(e.target.value)} placeholder="0" className="font-bold text-center" dir="ltr" />}
                           </FormField>
                         </div>
                         <p className="text-xs text-slate-500 mt-2">أدخل المدة بالساعات والدقائق والثواني. مثال: 30 دقيقة = 0 ساعة، 30 دقيقة، 0 ثانية.</p>
@@ -1155,14 +1155,14 @@ export default function VideoManagement({ courses = [] }: VideoManagementProps) 
                         <div className="md:col-span-2">
                           <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">مدة الفيديو</label>
                           <div className="grid grid-cols-3 gap-3" dir="rtl">
-                            <FormField required label="ساعات">
-                              {({ id }) => <Input id={id} size="lg" type="number" min="0" value={editDurationHours} onChange={(e) => setEditDurationHours(e.target.value)} placeholder="0" className="font-bold text-center" dir="ltr" required />}
+                            <FormField label="ساعات">
+                              {({ id }) => <Input id={id} size="lg" type="number" min="0" value={editDurationHours} onChange={(e) => setEditDurationHours(e.target.value)} placeholder="0" className="font-bold text-center" dir="ltr" />}
                             </FormField>
-                            <FormField required label="دقائق">
-                              {({ id }) => <Input id={id} size="lg" type="number" min="0" max="59" value={editDurationMinutes} onChange={(e) => setEditDurationMinutes(e.target.value)} placeholder="0" className="font-bold text-center" dir="ltr" required />}
+                            <FormField label="دقائق">
+                              {({ id }) => <Input id={id} size="lg" type="number" min="0" max="59" value={editDurationMinutes} onChange={(e) => setEditDurationMinutes(e.target.value)} placeholder="0" className="font-bold text-center" dir="ltr" />}
                             </FormField>
-                            <FormField required label="ثواني">
-                              {({ id }) => <Input id={id} size="lg" type="number" min="0" max="59" value={editDurationSeconds} onChange={(e) => setEditDurationSeconds(e.target.value)} placeholder="0" className="font-bold text-center" dir="ltr" required />}
+                            <FormField label="ثواني">
+                              {({ id }) => <Input id={id} size="lg" type="number" min="0" max="59" value={editDurationSeconds} onChange={(e) => setEditDurationSeconds(e.target.value)} placeholder="0" className="font-bold text-center" dir="ltr" />}
                             </FormField>
                           </div>
                           <p className="text-xs text-slate-500 mt-2">أدخل المدة بالساعات والدقائق والثواني.</p>
