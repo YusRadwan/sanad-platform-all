@@ -22,8 +22,16 @@ function escapeHtml(value: string): string {
 }
 
 export function printTableAsPdf(title: string, columns: string[], rows: string[][]): void {
-  const win = window.open('', '_blank', 'noopener,noreferrer');
-  if (!win) return;
+  // Do not pass `noopener`/`noreferrer` in window.open features here:
+  // Chromium may return `null` when noopener is requested, leaving the
+  // export handler with no Window reference to write/print the report.
+  const win = window.open('', '_blank');
+  if (!win) {
+    console.error('PDF export popup was blocked by the browser.');
+    return;
+  }
+  // Keep the new print window isolated from the application window.
+  win.opener = null;
 
   const headerHtml = columns.map((c) => `<th>${escapeHtml(c)}</th>`).join('');
   const rowsHtml = rows
