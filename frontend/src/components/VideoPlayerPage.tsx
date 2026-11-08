@@ -72,6 +72,10 @@ export default function VideoPlayerPage() {
   const playerWrapperRef = useRef<HTMLDivElement>(null);
   const isSavingRef = useRef(false);
   const lastSavedRef = useRef<number>(0);
+  const watchSessionKeyRef = useRef('');
+  const watchedSecondsRef = useRef(0);
+  const lastWatchTickRef = useRef(0);
+  const playbackActiveRef = useRef(false);
 
   const [videoData, setVideoData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -113,6 +117,63 @@ export default function VideoPlayerPage() {
     () => (videoData?.videoUrl ? resolveVideoEmbed(videoData.videoUrl, videoData.provider) : null),
     [videoData?.videoUrl, videoData?.provider]
   );
+
+  // A distinct UUID identifies each visit to this video. The backend
+  // stores the cumulative seconds, making retried heartbeats idempotent.
+  useEffect(() => {
+    watchSessionKeyRef.current = window.crypto?.randomUUID?.()
+      || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    watchedSecondsRef.current = 0;
+    lastWatchTickRef.current = 0;
+    playbackActiveRef.current = false;
+  }, [videoId]);
+
+  const flushWatchSession = () => {
+    if (!videoId || !watchSessionKeyRef.current || watchedSecondsRef.current <= 0) return;
+    courseService.saveVideoWatchSession(
+      videoId,
+      watchSessionKeyRef.current,
+      watchedSecondsRef.current
+    ).catch((err) => logger.warn('Failed to save watch session gracefully', err));
+  };
+
+  const trackWatchTime = () => {
+    if (!playbackActiveRef.current) return;
+    const now = Date.now();
+    if (lastWatchTickRef.current > 0) {
+      // Cap a delayed/background timer tick so sleeping tabs do not fabricate
+      // long viewing sessions.
+      const elapsed = Math.max(0, Math.min(20, Math.floor((now - lastWatchTickRef.current) / 1000)));
+      if (elapsed > 0) {
+        watchedSecondsRef.current += elapsed;
+        flushWatchSession();
+      }
+    }
+    lastWatchTickRef.current = now;
+  };
+
+  const startWatchSession = () => {
+    if (playbackActiveRef.current) return;
+    playbackActiveRef.current = true;
+    lastWatchTickRef.current = Date.now();
+  };
+
+  const stopWatchSession = () => {
+    trackWatchTime();
+    playbackActiveRef.current = false;
+    lastWatchTickRef.current = 0;
+    flushWatchSession();
+  };
+
+  useEffect(() => {
+    const timer = window.setInterval(() => trackWatchTime(), 10000);
+    return () => {
+      stopWatchSession();
+      window.clearInterval(timer);
+    };
+    // The refs are stable; this timer belongs to the current mounted player.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoId]);
 
   /**
    * Shared by all three playable kinds — only WHERE currentTime/duration come
@@ -156,15 +217,24 @@ export default function VideoPlayerPage() {
     if (!videoElement || !videoId || loading) return;
 
     const handleTimeUpdateNative = () => persistProgress(videoElement.currentTime, videoElement.duration);
-    const handleEndedNative = () => persistProgress(videoElement.duration, videoElement.duration, true, true);
-    const handlePauseNative = () => persistProgress(videoElement.currentTime, videoElement.duration, true);
+    const handlePlayNative = () => startWatchSession();
+    const handleEndedNative = () => {
+      stopWatchSession();
+      persistProgress(videoElement.duration, videoElement.duration, true, true);
+    };
+    const handlePauseNative = () => {
+      stopWatchSession();
+      persistProgress(videoElement.currentTime, videoElement.duration, true);
+    };
 
     videoElement.addEventListener('timeupdate', handleTimeUpdateNative);
+    videoElement.addEventListener('play', handlePlayNative);
     videoElement.addEventListener('ended', handleEndedNative);
     videoElement.addEventListener('pause', handlePauseNative);
 
     return () => {
       videoElement.removeEventListener('timeupdate', handleTimeUpdateNative);
+      videoElement.removeEventListener('play', handlePlayNative);
       videoElement.removeEventListener('ended', handleEndedNative);
       videoElement.removeEventListener('pause', handlePauseNative);
     };
@@ -194,10 +264,12 @@ export default function VideoPlayerPage() {
           },
           onStateChange: (e: any) => {
             if (e.data === YT.PlayerState.PLAYING) {
+              startWatchSession();
               pollInterval = setInterval(() => {
                 persistProgress(player.getCurrentTime(), player.getDuration());
               }, 30000);
             } else {
+              stopWatchSession();
               clearInterval(pollInterval);
               if (e.data === YT.PlayerState.PAUSED) {
                 persistProgress(player.getCurrentTime(), player.getDuration(), true);
@@ -238,13 +310,16 @@ export default function VideoPlayerPage() {
         }
       });
 
+      player.on('play', () => startWatchSession());
       player.on('timeupdate', (data: { seconds: number; duration: number }) => {
         persistProgress(data.seconds, data.duration);
       });
       player.on('pause', (data: { seconds: number; duration: number }) => {
+        stopWatchSession();
         persistProgress(data.seconds, data.duration, true);
       });
       player.on('ended', (data: { duration: number }) => {
+        stopWatchSession();
         persistProgress(data.duration, data.duration, true, true);
       });
     });
