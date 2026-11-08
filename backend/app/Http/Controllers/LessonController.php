@@ -153,6 +153,26 @@ final class LessonController extends Controller
     }
 
     /**
+     * POST /api/v1/lessons/{id}/watch-sessions.
+     *
+     * The client submits a cumulative session total, not a delta. This makes
+     * retried and out-of-order heartbeats idempotent at the database layer.
+     */
+    public function recordWatchSession(Request $request, string $id, RecordVideoWatchSession $record): JsonResponse
+    {
+        [$user, $lesson] = $this->resolve($request, $id);
+
+        $data = $request->validate([
+            'session_key' => ['required', 'uuid'],
+            'watched_seconds' => ['required', 'integer', 'min:0', 'max:86400'],
+        ]);
+
+        $record($user, $lesson, $data);
+
+        return ApiResponse::success([], 'تم تسجيل جلسة المشاهدة');
+    }
+
+    /**
      * The ladder all three routes share, in backend/'s order.
      *
      * ┌── THE TYPE CHECK RUNS **BEFORE** THE ACCESS CHECK. ──────────────────┐
