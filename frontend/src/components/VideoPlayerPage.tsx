@@ -152,6 +152,12 @@ export default function VideoPlayerPage() {
     watchedSecondsRef.current = 0;
     lastWatchTickRef.current = 0;
     playbackActiveRef.current = false;
+    if (videoId) {
+      // Count each visit to the player, even if the student leaves before
+      // pressing play. The server treats instructor previews as a no-op.
+      courseService.saveVideoWatchSession(videoId, watchSessionKeyRef.current, 0)
+        .catch((err) => logger.warn('Failed to create video watch session', err));
+    }
   }, [videoId]);
 
   const flushWatchSession = () => {
@@ -182,8 +188,6 @@ export default function VideoPlayerPage() {
     if (playbackActiveRef.current) return;
     playbackActiveRef.current = true;
     lastWatchTickRef.current = Date.now();
-    // Create the session immediately so started_at reflects the actual open.
-    flushWatchSession();
   };
 
   const stopWatchSession = () => {
