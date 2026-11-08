@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Actions\Lesson\SaveLessonProgress;
+use App\Actions\Lesson\RecordVideoWatchSession;
 use App\Enums\UserRole;
 use App\Http\Resources\LessonProgressResource;
 use App\Http\Responses\ApiResponse;
