@@ -278,19 +278,18 @@ export default function WatchStatistics() {
         icon={BarChart3}
         title="إحصائيات المشاهدات"
         description="تحليل مشاهدة الطلاب لفيديوهات الكورسات"
+        actions={
+          <Button
+            variant="outline"
+            size="md"
+            icon={History}
+            disabled={!selectedVideoId || loadingReport || !report}
+            onClick={() => setShowSessionDetails((value) => !value)}
+          >
+            {showSessionDetails ? 'إخفاء تفاصيل الجلسات' : 'تفاصيل جلسات المشاهدة'}
+          </Button>
+        }
       />
-
-      <div className="flex justify-start">
-        <Button
-          variant="outline"
-          size="md"
-          icon={History}
-          disabled={!selectedVideoId || loadingReport || !report}
-          onClick={() => setShowSessionDetails((value) => !value)}
-        >
-          {showSessionDetails ? 'إخفاء تفاصيل الجلسات' : 'تفاصيل جلسات المشاهدة'}
-        </Button>
-      </div>
 
       <Card radius="panel" className="space-y-4">
         <SectionHeader icon={Video} title="اختر الفيديو" description="حدد الصف، ثم الكورس، ثم الفيديو" />
@@ -337,7 +336,7 @@ export default function WatchStatistics() {
                 <Select
                   id={id}
                   value={selectedVideoId}
-                  onChange={(e) => setSelectedVideoId(e.target.value)}
+                  onChange={(e) => { setSelectedVideoId(e.target.value); setShowSessionDetails(false); }}
                   disabled={!selectedCourseId || loadingVideos}
                 >
                   {!selectedCourseId ? <option value="">يرجى اختيار الكورس أولاً</option> : loadingVideos ? (
