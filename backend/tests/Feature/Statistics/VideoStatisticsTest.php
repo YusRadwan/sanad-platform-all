@@ -99,4 +99,43 @@ final class VideoStatisticsTest extends TestCase
         $this->loginAs($stranger);
         $this->getJson("/api/v1/content-items/{$item->getKey()}/watch-statistics")->assertStatus(403);
     }
+
+    public function test_report_includes_each_student_watch_session_and_total_open_count(): void
+    {
+        $this->disableRateLimiting();
+        $teacher = $this->makeInstructor();
+        $course = $this->makeCourseFor($teacher);
+        $section = $this->makeSection($course);
+        $item = $this->makeContentItemWithDetail($section, ContentItemType::Video, [
+            'video_url' => 'https://example.com/v.mp4',
+            'duration' => 1800,
+        ]);
+        $student = $this->makeStudentUser();
+        $this->makeSubscription($student, $course);
+
+        $this->loginAs($student);
+        $this->postJson("/api/v1/lessons/{$item->getKey()}/watch-sessions", [
+            'session_key' => 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee',
+            'watched_seconds' => 125,
+        ])->assertOk();
+        $this->postJson("/api/v1/lessons/{$item->getKey()}/watch-sessions", [
+            'session_key' => 'bbbbbbbb-cccc-4ddd-8eee-ffffffffffff',
+            'watched_seconds' => 300,
+        ])->assertOk();
+
+        $this->loginAs($teacher);
+        $data = $this->getJson("/api/v1/content-items/{$item->getKey()}/watch-statistics")
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame(2, $data['stats']['total_watch_sessions']);
+        $this->assertSame(425, $data['stats']['total_session_watch_seconds']);
+        $this->assertSame(1, $data['stats']['watched_count']);
+
+        $row = collect($data['watched'])->firstWhere('student_id', (string) $student->getKey());
+        $this->assertSame(2, $row['sessions_count']);
+        $this->assertSame(425, $row['session_watched_seconds']);
+        $this->assertCount(2, $row['sessions']);
+    }
+
 }
