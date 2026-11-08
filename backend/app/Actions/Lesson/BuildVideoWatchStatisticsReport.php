@@ -8,6 +8,7 @@ use App\Models\ContentItem;
 use App\Models\LessonProgress;
 use App\Models\Student;
 use App\Models\Subscription;
+use App\Models\VideoWatchSession;
 
 /**
  * "إحصائيات المشاهدات" — one video's full watch report for its owning
