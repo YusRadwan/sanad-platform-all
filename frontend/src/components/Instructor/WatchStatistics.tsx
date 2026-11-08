@@ -228,11 +228,13 @@ export default function WatchStatistics() {
     if (!report) return;
     const columns: XlsxColumn[] = [
       { header: '#', width: 6 }, { header: 'الطالب', width: 26 }, { header: 'رقم الهاتف', width: 16 },
-      { header: 'هاتف ولي الأمر', width: 16 }, { header: 'نسبة المشاهدة', width: 12 },
+      { header: 'هاتف ولي الأمر', width: 16 }, { header: 'مرات الفتح', width: 12 },
+      { header: 'وقت المشاهدة', width: 16 }, { header: 'نسبة المشاهدة', width: 12 },
       { header: 'آخر مشاهدة', width: 20 }, { header: 'الحالة', width: 12 },
     ];
     const rows = watchedRows.map((r, i) => [
       String(i + 1), r.name || '—', r.phone || '—', r.parent_phone || '—',
+      String(r.sessions_count), formatWatchTime(r.session_watched_seconds),
       `${r.watch_percent}%`, r.last_watched_at || '—', r.completed ? 'مكتمل' : 'غير مكتمل',
     ]);
     downloadXlsx(`المشاهدون - ${report.video.title || 'فيديو'}`, columns, rows, 'المشاهدون');
@@ -242,9 +244,10 @@ export default function WatchStatistics() {
     if (!report) return;
     printTableAsPdf(
       `المشاهدون — ${report.video.title || 'فيديو'}`,
-      ['#', 'الطالب', 'رقم الهاتف', 'هاتف ولي الأمر', 'نسبة المشاهدة', 'آخر مشاهدة', 'الحالة'],
+      ['#', 'الطالب', 'رقم الهاتف', 'هاتف ولي الأمر', 'مرات الفتح', 'وقت المشاهدة', 'نسبة المشاهدة', 'آخر مشاهدة', 'الحالة'],
       watchedRows.map((r, i) => [
         String(i + 1), r.name || '—', r.phone || '—', r.parent_phone || '—',
+        String(r.sessions_count), formatWatchTime(r.session_watched_seconds),
         `${r.watch_percent}%`, r.last_watched_at || '—', r.completed ? 'مكتمل' : 'غير مكتمل',
       ])
     );
