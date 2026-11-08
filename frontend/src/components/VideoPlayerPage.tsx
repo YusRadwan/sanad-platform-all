@@ -53,14 +53,14 @@ function loadVimeoApi(): Promise<void> {
   });
 }
 
-/** Seconds -> "12:05" / "1:02:05" for the duration chip. */
+/** Seconds -> always display hours, minutes, and seconds (HH:MM:SS). */
 function formatDuration(totalSeconds: number): string {
   const seconds = Math.max(0, Math.round(totalSeconds));
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
   const pad = (n: number) => String(n).padStart(2, '0');
-  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
 
 export default function VideoPlayerPage() {
