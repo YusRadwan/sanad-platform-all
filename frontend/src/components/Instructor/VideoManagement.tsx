@@ -517,7 +517,8 @@ export default function VideoManagement({ courses = [] }: VideoManagementProps) 
         description: addDescription.trim(),
         url: addUrl.trim(),
         provider: addProvider,
-        // The form accepts minutes; the API and videos table store seconds.\n        duration: Math.round(Number(addDuration.trim()) * 60),
+        // The form accepts minutes; the API and videos table store seconds.
+        duration: Math.round(Number(addDuration.trim()) * 60),
         thumbnailUrl,
         isFree: addIsFree,
         startDate: addStartDate || undefined,
@@ -572,7 +573,8 @@ export default function VideoManagement({ courses = [] }: VideoManagementProps) 
         description: editDescription.trim(),
         url: editUrl.trim(),
         provider: editProvider,
-        // The form accepts minutes; the API and videos table store seconds.\n        duration: Math.round(Number(editDuration.trim()) * 60),
+        // The form accepts minutes; the API and videos table store seconds.
+        duration: Math.round(Number(editDuration.trim()) * 60),
         thumbnailUrl,
         isFree: editIsFree,
         startDate: editStartDate || undefined,
