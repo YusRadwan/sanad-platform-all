@@ -12,8 +12,8 @@ jobs:
     steps:
       - name: Configure SSH
         env:
-          SSH_PRIVATE_KEY_B64: \${{ secrets.HOSTINGER_SSH_PRIVATE_KEY_B64 }}
-          SSH_KNOWN_HOSTS: \${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
+          SSH_PRIVATE_KEY_B64: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY_B64 }}
+          SSH_KNOWN_HOSTS: ${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
         run: |
           set -e
           mkdir -p ~/.ssh
@@ -31,9 +31,9 @@ jobs:
 
       - name: Inspect deployment paths and Laravel files (read only)
         env:
-          SSH_HOST: \${{ secrets.HOSTINGER_SSH_HOST }}
-          SSH_PORT: \${{ secrets.HOSTINGER_SSH_PORT }}
-          SSH_USER: \${{ secrets.HOSTINGER_SSH_USER }}
+          SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
         run: |
           set -e
           case "$SSH_HOST" in *[!A-Za-z0-9.-]*) echo "Invalid SSH host"; exit 2;; esac
