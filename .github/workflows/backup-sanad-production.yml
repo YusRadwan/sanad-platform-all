@@ -76,10 +76,10 @@ jobs:
           read_env() {
             "$PHP_BIN" -r '
             require $argv[1] . "/vendor/autoload.php";
-            $env = Dotenv\\Dotenv::parse(file_get_contents($argv[2]));
+            $env = Dotenv\Dotenv::parse(file_get_contents($argv[2]));
             $key = $argv[3];
             if (!array_key_exists($key, $env)) {
-                fwrite(STDERR, "Missing required database setting: $key\\n");
+                fwrite(STDERR, "Missing required database setting: $key\n");
                 exit(20);
             }
             echo $env[$key];
