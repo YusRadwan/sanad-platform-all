@@ -462,4 +462,64 @@ final class LessonProgressTest extends TestCase
         $this->loginAs($user);
         $this->startNextRequest();
     }
+
+    public function test_student_watch_sessions_are_recorded_idempotently_per_player_visit(): void
+    {
+        $this->freshLogin($this->student);
+        $sessionKey = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee';
+
+        $this->postJson("/api/v1/lessons/{$this->lesson->getKey()}/watch-sessions", [
+            'session_key' => $sessionKey,
+            'watched_seconds' => 20,
+        ])->assertOk();
+
+        $this->postJson("/api/v1/lessons/{$this->lesson->getKey()}/watch-sessions", [
+            'session_key' => $sessionKey,
+            'watched_seconds' => 35,
+        ])->assertOk();
+
+        // A delayed/retried lower heartbeat must never reduce the session total.
+        $this->postJson("/api/v1/lessons/{$this->lesson->getKey()}/watch-sessions", [
+            'session_key' => $sessionKey,
+            'watched_seconds' => 10,
+        ])->assertOk();
+
+        $this->assertDatabaseCount('video_watch_sessions', 1);
+        $this->assertDatabaseHas('video_watch_sessions', [
+            'student_id' => $this->student->getKey(),
+            'content_item_id' => $this->lesson->getKey(),
+            'session_key' => $sessionKey,
+            'watched_seconds' => 35,
+        ]);
+
+        $this->postJson("/api/v1/lessons/{$this->lesson->getKey()}/watch-sessions", [
+            'session_key' => 'bbbbbbbb-cccc-4ddd-8eee-ffffffffffff',
+            'watched_seconds' => 12,
+        ])->assertOk();
+
+        $this->assertDatabaseCount('video_watch_sessions', 2);
+    }
+
+    public function test_non_students_do_not_create_video_watch_sessions(): void
+    {
+        $this->freshLogin($this->owner);
+
+        $this->postJson("/api/v1/lessons/{$this->lesson->getKey()}/watch-sessions", [
+            'session_key' => 'cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa',
+            'watched_seconds' => 25,
+        ])->assertOk();
+
+        $this->assertDatabaseCount('video_watch_sessions', 0);
+    }
+
+    public function test_watch_session_payload_is_validated(): void
+    {
+        $this->freshLogin($this->student);
+
+        $this->postJson("/api/v1/lessons/{$this->lesson->getKey()}/watch-sessions", [
+            'session_key' => 'not-a-uuid',
+            'watched_seconds' => 25,
+        ])->assertUnprocessable();
+    }
+
 }

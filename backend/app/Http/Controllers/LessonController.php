@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Actions\Lesson\SaveLessonProgress;
+use App\Actions\Lesson\RecordVideoWatchSession;
 use App\Enums\UserRole;
 use App\Http\Resources\LessonProgressResource;
 use App\Http\Responses\ApiResponse;
@@ -150,6 +151,26 @@ final class LessonController extends Controller
             ['progress' => LessonProgressResource::forRow($row)],
             'تم حفظ التقدم'
         );
+    }
+
+    /**
+     * POST /api/v1/lessons/{id}/watch-sessions.
+     *
+     * The client submits a cumulative session total, not a delta. This makes
+     * retried and out-of-order heartbeats idempotent at the database layer.
+     */
+    public function recordWatchSession(Request $request, string $id, RecordVideoWatchSession $record): JsonResponse
+    {
+        [$user, $lesson] = $this->resolve($request, $id);
+
+        $data = $request->validate([
+            'session_key' => ['required', 'uuid'],
+            'watched_seconds' => ['required', 'integer', 'min:0', 'max:86400'],
+        ]);
+
+        $record($user, $lesson, $data);
+
+        return ApiResponse::success([], 'تم تسجيل جلسة المشاهدة');
     }
 
     /**

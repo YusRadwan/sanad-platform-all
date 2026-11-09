@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import {
   BarChart3, Search, Users, UserCheck, UserX, Award, Target, Percent,
-  FileDown, FileSpreadsheet, GraduationCap, BookOpen, Video,
+  FileDown, FileSpreadsheet, GraduationCap, BookOpen, Video, History, Clock3,
 } from 'lucide-react';
 import { courseService } from '../../services/courseService';
 import { statisticsService } from '../../services/statisticsService';
@@ -51,6 +51,13 @@ interface VideoOption {
   title: string;
 }
 
+interface WatchSessionRow {
+  id: string;
+  watched_seconds: number;
+  started_at: string | null;
+  last_activity_at: string | null;
+}
+
 interface WatchedRow {
   student_id: string;
   name: string | null;
@@ -61,6 +68,9 @@ interface WatchedRow {
   watch_percent: number;
   completed: boolean;
   last_watched_at: string | null;
+  sessions_count: number;
+  session_watched_seconds: number;
+  sessions: WatchSessionRow[];
 }
 
 interface NotWatchedRow {
@@ -80,12 +90,25 @@ interface WatchStatisticsReport {
     total_students: number;
     completed_count: number;
     completion_rate_percent: number | null;
+    total_watch_sessions: number;
+    total_session_watch_seconds: number;
   };
   watched: WatchedRow[];
   not_watched: NotWatchedRow[];
 }
 
 type Tab = 'watched' | 'not_watched';
+
+function formatWatchTime(totalSeconds: number): string {
+  const seconds = Math.max(0, Math.floor(totalSeconds || 0));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remaining = seconds % 60;
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return hours > 0
+    ? `${pad(hours)}:${pad(minutes)}:${pad(remaining)}`
+    : `${pad(minutes)}:${pad(remaining)}`;
+}
 
 export default function WatchStatistics() {
   const { notify } = useCenteredNotification();
@@ -175,6 +198,19 @@ export default function WatchStatistics() {
 
   const [tab, setTab] = useState<Tab>('watched');
   const [phone, setPhone] = useState('');
+  const [showSessionDetails, setShowSessionDetails] = useState(false);
+
+  const sessionRows = useMemo(
+    () => (report?.watched || []).flatMap((student) =>
+      student.sessions.map((session) => ({
+        ...session,
+        student_id: student.student_id,
+        student_name: student.name || '—',
+        phone: student.phone || '—',
+      }))
+    ).filter((session) => !phone.trim() || session.phone.includes(phone.trim())),
+    [report, phone]
+  );
 
   const watchedRows = useMemo(() => {
     if (!report) return [];
@@ -192,11 +228,13 @@ export default function WatchStatistics() {
     if (!report) return;
     const columns: XlsxColumn[] = [
       { header: '#', width: 6 }, { header: 'الطالب', width: 26 }, { header: 'رقم الهاتف', width: 16 },
-      { header: 'هاتف ولي الأمر', width: 16 }, { header: 'نسبة المشاهدة', width: 12 },
+      { header: 'هاتف ولي الأمر', width: 16 }, { header: 'مرات الفتح', width: 12 },
+      { header: 'وقت المشاهدة', width: 16 }, { header: 'نسبة المشاهدة', width: 12 },
       { header: 'آخر مشاهدة', width: 20 }, { header: 'الحالة', width: 12 },
     ];
     const rows = watchedRows.map((r, i) => [
       String(i + 1), r.name || '—', r.phone || '—', r.parent_phone || '—',
+      String(r.sessions_count), formatWatchTime(r.session_watched_seconds),
       `${r.watch_percent}%`, r.last_watched_at || '—', r.completed ? 'مكتمل' : 'غير مكتمل',
     ]);
     downloadXlsx(`المشاهدون - ${report.video.title || 'فيديو'}`, columns, rows, 'المشاهدون');
@@ -206,9 +244,10 @@ export default function WatchStatistics() {
     if (!report) return;
     printTableAsPdf(
       `المشاهدون — ${report.video.title || 'فيديو'}`,
-      ['#', 'الطالب', 'رقم الهاتف', 'هاتف ولي الأمر', 'نسبة المشاهدة', 'آخر مشاهدة', 'الحالة'],
+      ['#', 'الطالب', 'رقم الهاتف', 'هاتف ولي الأمر', 'مرات الفتح', 'وقت المشاهدة', 'نسبة المشاهدة', 'آخر مشاهدة', 'الحالة'],
       watchedRows.map((r, i) => [
         String(i + 1), r.name || '—', r.phone || '—', r.parent_phone || '—',
+        String(r.sessions_count), formatWatchTime(r.session_watched_seconds),
         `${r.watch_percent}%`, r.last_watched_at || '—', r.completed ? 'مكتمل' : 'غير مكتمل',
       ])
     );
@@ -242,6 +281,17 @@ export default function WatchStatistics() {
         icon={BarChart3}
         title="إحصائيات المشاهدات"
         description="تحليل مشاهدة الطلاب لفيديوهات الكورسات"
+        actions={
+          <Button
+            variant="outline"
+            size="md"
+            icon={History}
+            disabled={!selectedVideoId || loadingReport || !report}
+            onClick={() => setShowSessionDetails((value) => !value)}
+          >
+            {showSessionDetails ? 'إخفاء تفاصيل المشاهدات' : 'تفاصيل المشاهدات'}
+          </Button>
+        }
       />
 
       <Card radius="panel" className="space-y-4">
@@ -289,7 +339,7 @@ export default function WatchStatistics() {
                 <Select
                   id={id}
                   value={selectedVideoId}
-                  onChange={(e) => setSelectedVideoId(e.target.value)}
+                  onChange={(e) => { setSelectedVideoId(e.target.value); setShowSessionDetails(false); }}
                   disabled={!selectedCourseId || loadingVideos}
                 >
                   {!selectedCourseId ? <option value="">يرجى اختيار الكورس أولاً</option> : loadingVideos ? (
@@ -327,6 +377,45 @@ export default function WatchStatistics() {
             <StatCard index={4} icon={Award} label="عدد من أكملوا المشاهدة" value={report.stats.completed_count} color="rose" />
             <StatCard index={5} icon={Target} label="نسبة الإكمال" value={report.stats.completion_rate_percent !== null ? `${report.stats.completion_rate_percent}%` : '—'} color="emerald" />
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <StatCard index={6} icon={History} label="إجمالي مرات فتح الفيديو" value={report.stats.total_watch_sessions} color="blue" />
+            <StatCard index={7} icon={Clock3} label="إجمالي وقت المشاهدة" value={formatWatchTime(report.stats.total_session_watch_seconds)} color="violet" />
+          </div>
+
+          {showSessionDetails && (
+            <Card radius="panel" padding="none" className="overflow-hidden">
+              <div className="p-4 border-b border-slate-100 dark:border-slate-800">
+                <SectionHeader icon={History} title="تفاصيل جلسات المشاهدة" description="كل مرة فتح فيها الطالب الفيديو ومدة المشاهدة المسجلة" />
+              </div>
+              <Table zebra>
+                <TableHeader>
+                  <tr>
+                    <TableHead>#</TableHead>
+                    <TableHead>الطالب</TableHead>
+                    <TableHead>رقم الهاتف</TableHead>
+                    <TableHead align="center">وقت فتح الفيديو</TableHead>
+                    <TableHead align="center">آخر نشاط</TableHead>
+                    <TableHead align="center">مدة المشاهدة</TableHead>
+                  </tr>
+                </TableHeader>
+                <TableBody>
+                  {sessionRows.length === 0 ? (
+                    <TableEmptyState colSpan={6} icon={History} title="لا توجد جلسات مشاهدة مسجلة لهذا الفيديو حتى الآن" />
+                  ) : sessionRows.map((session, index) => (
+                    <TableRow key={session.id}>
+                      <TableCell className="font-mono text-slate-400">{index + 1}</TableCell>
+                      <TableCell emphasis>{session.student_name}</TableCell>
+                      <TableCell className="font-mono" dir="ltr">{session.phone}</TableCell>
+                      <TableCell align="center" className="font-mono text-xs">{session.started_at || '—'}</TableCell>
+                      <TableCell align="center" className="font-mono text-xs">{session.last_activity_at || '—'}</TableCell>
+                      <TableCell align="center" className="font-black">{formatWatchTime(session.watched_seconds)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          )}
 
           <Card radius="panel">
             <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3">
@@ -388,6 +477,8 @@ export default function WatchStatistics() {
                     <TableHead>الطالب</TableHead>
                     <TableHead>رقم الهاتف</TableHead>
                     <TableHead>هاتف ولي الأمر</TableHead>
+                    <TableHead align="center">مرات الفتح</TableHead>
+                    <TableHead align="center">إجمالي وقت المشاهدة</TableHead>
                     <TableHead align="center">نسبة المشاهدة</TableHead>
                     <TableHead align="center">آخر مشاهدة</TableHead>
                     <TableHead align="center">الحالة</TableHead>
@@ -395,7 +486,7 @@ export default function WatchStatistics() {
                 </TableHeader>
                 <TableBody>
                   {watchedRows.length === 0 ? (
-                    <TableEmptyState colSpan={7} icon={UserCheck} title="لا يوجد مشاهدون" />
+                    <TableEmptyState colSpan={9} icon={UserCheck} title="لا يوجد مشاهدون" />
                   ) : (
                     watchedRows.map((r, i) => (
                       <TableRow key={r.student_id}>
@@ -403,6 +494,8 @@ export default function WatchStatistics() {
                         <TableCell emphasis>{r.name || '—'}</TableCell>
                         <TableCell className="font-mono" dir="ltr">{r.phone || '—'}</TableCell>
                         <TableCell className="font-mono" dir="ltr">{r.parent_phone || '—'}</TableCell>
+                        <TableCell align="center" className="font-black">{r.sessions_count}</TableCell>
+                        <TableCell align="center" className="font-black">{formatWatchTime(r.session_watched_seconds)}</TableCell>
                         <TableCell align="center" className="font-black">{r.watch_percent}%</TableCell>
                         <TableCell align="center" className="font-mono text-[11px] text-slate-500 dark:text-slate-400">{r.last_watched_at || '—'}</TableCell>
                         <TableCell align="center">

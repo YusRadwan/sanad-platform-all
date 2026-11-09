@@ -8,6 +8,7 @@ use App\Models\ContentItem;
 use App\Models\LessonProgress;
 use App\Models\Student;
 use App\Models\Subscription;
+use App\Models\VideoWatchSession;
 
 /**
  * "إحصائيات المشاهدات" — one video's full watch report for its owning
@@ -46,7 +47,15 @@ final class BuildVideoWatchStatisticsReport
             ->get()
             ->keyBy(fn (LessonProgress $p): string => (string) $p->getAttribute('student_id'));
 
-        $watchedIds = $progressByStudent->keys();
+        $sessionsByStudent = VideoWatchSession::query()
+            ->where('content_item_id', $item->getKey())
+            ->orderByDesc('started_at')
+            ->get()
+            ->groupBy(fn (VideoWatchSession $session): string => (string) $session->getAttribute('student_id'));
+
+        // A valid watch session also counts as a view if a progress heartbeat
+        // was interrupted before lesson_progress could be written.
+        $watchedIds = $progressByStudent->keys()->merge($sessionsByStudent->keys())->unique();
 
         $students = Student::query()
             ->with('user')
@@ -54,15 +63,20 @@ final class BuildVideoWatchStatisticsReport
             ->get()
             ->keyBy(fn (Student $s): string => (string) $s->getKey());
 
-        $watched = $watchedIds->map(function (string $studentId) use ($progressByStudent, $students, $duration): array {
+        $watched = $watchedIds->map(function (string $studentId) use ($progressByStudent, $sessionsByStudent, $students, $duration): array {
             $progress = $progressByStudent->get($studentId);
+            $sessions = $sessionsByStudent->get($studentId, collect());
             $student = $students->get($studentId);
-            $seconds = (int) $progress->getAttribute('progress_seconds');
-            $completed = (bool) $progress->getAttribute('completed');
+            $seconds = (int) ($progress?->getAttribute('progress_seconds') ?? 0);
+            $completed = (bool) ($progress?->getAttribute('completed') ?? false);
+            $sessionSeconds = (int) $sessions->sum('watched_seconds');
 
             $percent = $duration > 0
                 ? min(100.0, round(($seconds / $duration) * 100, 1))
                 : ($completed ? 100.0 : 0.0);
+
+            $lastActivity = $sessions->first()?->getAttribute('last_activity_at')
+                ?? $progress?->getAttribute('last_watched_at');
 
             return [
                 'student_id' => $studentId,
@@ -73,7 +87,15 @@ final class BuildVideoWatchStatisticsReport
                 'watched_seconds' => $seconds,
                 'watch_percent' => $percent,
                 'completed' => $completed,
-                'last_watched_at' => $progress->getAttribute('last_watched_at')?->format('Y-m-d H:i:s'),
+                'last_watched_at' => $lastActivity?->format('Y-m-d H:i:s'),
+                'sessions_count' => $sessions->count(),
+                'session_watched_seconds' => $sessionSeconds,
+                'sessions' => $sessions->map(fn (VideoWatchSession $session): array => [
+                    'id' => (string) $session->getKey(),
+                    'watched_seconds' => (int) $session->getAttribute('watched_seconds'),
+                    'started_at' => $session->getAttribute('started_at')?->format('Y-m-d H:i:s'),
+                    'last_activity_at' => $session->getAttribute('last_activity_at')?->format('Y-m-d H:i:s'),
+                ])->values()->all(),
             ];
         })->values();
 
@@ -112,6 +134,8 @@ final class BuildVideoWatchStatisticsReport
                 'total_students' => $totalStudents,
                 'completed_count' => $completedCount,
                 'completion_rate_percent' => $completionRate,
+                'total_watch_sessions' => $sessionsByStudent->flatten()->count(),
+                'total_session_watch_seconds' => (int) $sessionsByStudent->flatten()->sum('watched_seconds'),
             ],
             'watched' => $watched->all(),
             'not_watched' => $notWatched->all(),

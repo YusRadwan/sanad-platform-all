@@ -199,6 +199,18 @@ export const courseService = {
     }
   },
 
+  async saveVideoWatchSession(lessonId: string, sessionKey: string, watchedSeconds: number) {
+    try {
+      await api.post(`/lessons/${lessonId}/watch-sessions`, {
+        session_key: sessionKey,
+        watched_seconds: watchedSeconds,
+      });
+    } catch (error) {
+      logger.warn(`courseService.saveVideoWatchSession(${lessonId}) failed`, error as Error);
+      throw error;
+    }
+  },
+
   async getExams(courseId?: string) {
     if (!courseId) return [];
     try {
