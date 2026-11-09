@@ -103,6 +103,8 @@ export default function VideoPlayerPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [lastPosition, setLastPosition] = useState(0);
+  const [bunnyApiReady, setBunnyApiReady] = useState(false);
+  const [bunnyIframeLoaded, setBunnyIframeLoaded] = useState(false);
 
   useEffect(() => {
     const fetchVideoAndProgress = async () => {
@@ -363,50 +365,131 @@ export default function VideoPlayerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [embed?.kind, videoId, loading]);
 
-  // Bunny Stream uses Player.js for cross-origin iframe playback events.
+  // Load Bunny's Player.js BEFORE mounting its iframe. Bunny documents this
+  // ordering as required for a reliable Player.js handshake.
   useEffect(() => {
-    if (embed?.kind !== 'bunny-iframe' || loading || !bunnyIframeRef.current) return;
+    if (embed?.kind !== 'bunny-iframe' || loading) {
+      setBunnyApiReady(false);
+      setBunnyIframeLoaded(false);
+      return;
+    }
 
-    let player: any;
     let cancelled = false;
+    setBunnyApiReady(false);
+    setBunnyIframeLoaded(false);
 
-    loadBunnyPlayerApi().then(() => {
-      if (cancelled || !bunnyIframeRef.current) return;
-      const PlayerJs = (window as any).playerjs;
-      if (!PlayerJs?.Player) return;
-
-      player = new PlayerJs.Player(bunnyIframeRef.current);
-
-      // Register playback listeners only after Bunny's Player.js handshake.
-      // Some Bunny player versions emit timeupdate reliably while the play
-      // event can be missed during iframe initialization; timeupdate is a
-      // safe fallback because Player.js emits it during active playback.
-      player.on('ready', () => {
-        if (cancelled) return;
-
-        player.on('play', () => startWatchSession());
-        player.on('timeupdate', () => {
-          if (!playbackActiveRef.current) startWatchSession();
-        });
-        player.on('pause', () => stopWatchSession());
-        player.on('ended', () => stopWatchSession());
-        player.on('error', (error: unknown) => {
-          logger.warn('Bunny player reported a playback error', error);
-        });
+    loadBunnyPlayerApi()
+      .then(() => {
+        if (!cancelled) setBunnyApiReady(true);
+      })
+      .catch((err) => {
+        logger.warn('Bunny Player.js could not be loaded', err);
       });
-    }).catch((err) => {
-      logger.warn('Bunny player analytics could not be initialized', err);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [embed?.kind, videoId, loading]);
+
+  // Initialize Player.js only after both the library and iframe are ready.
+  useEffect(() => {
+    if (
+      embed?.kind !== 'bunny-iframe' ||
+      loading ||
+      !bunnyApiReady ||
+      !bunnyIframeLoaded ||
+      !bunnyIframeRef.current
+    ) return;
+
+    const PlayerJs = (window as any).playerjs;
+    if (!PlayerJs?.Player) {
+      logger.warn('Bunny Player.js global is unavailable after script load');
+      return;
+    }
+
+    let cancelled = false;
+    const player = new PlayerJs.Player(bunnyIframeRef.current);
+
+    const onPlay = () => startWatchSession();
+    const onTimeUpdate = (timingData: unknown) => {
+      if (cancelled) return;
+
+      if (!playbackActiveRef.current) startWatchSession();
+
+      let data: any = timingData;
+      if (typeof data === 'string') {
+        try {
+          data = JSON.parse(data);
+        } catch {
+          data = null;
+        }
+      }
+
+      const seconds = Number(data?.seconds);
+      const duration = Number(data?.duration);
+      if (Number.isFinite(seconds) && Number.isFinite(duration) && duration > 0) {
+        persistProgress(seconds, duration);
+      }
+    };
+    const onPause = (timingData: unknown) => {
+      stopWatchSession();
+
+      let data: any = timingData;
+      if (typeof data === 'string') {
+        try {
+          data = JSON.parse(data);
+        } catch {
+          data = null;
+        }
+      }
+
+      const seconds = Number(data?.seconds);
+      const duration = Number(data?.duration);
+      if (Number.isFinite(seconds) && Number.isFinite(duration) && duration > 0) {
+        persistProgress(seconds, duration, true);
+      }
+    };
+    const onEnded = (timingData: unknown) => {
+      stopWatchSession();
+
+      let data: any = timingData;
+      if (typeof data === 'string') {
+        try {
+          data = JSON.parse(data);
+        } catch {
+          data = null;
+        }
+      }
+
+      const duration = Number(data?.duration);
+      if (Number.isFinite(duration) && duration > 0) {
+        persistProgress(duration, duration, true, true);
+      }
+    };
+    const onError = (error: unknown) => {
+      logger.warn('Bunny player reported a playback error', error);
+    };
+
+    player.on('ready', () => {
+      if (cancelled) return;
+      player.on('play', onPlay);
+      player.on('timeupdate', onTimeUpdate);
+      player.on('pause', onPause);
+      player.on('ended', onEnded);
+      player.on('error', onError);
     });
 
     return () => {
       cancelled = true;
       stopWatchSession();
-      player?.off?.('play');
-      player?.off?.('pause');
-      player?.off?.('ended');
+      player.off?.('play', onPlay);
+      player.off?.('timeupdate', onTimeUpdate);
+      player.off?.('pause', onPause);
+      player.off?.('ended', onEnded);
+      player.off?.('error', onError);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [embed?.kind, videoId, loading]);
+  }, [embed?.kind, videoId, loading, bunnyApiReady, bunnyIframeLoaded]);
 
   // A guaranteed fullscreen affordance regardless of embed kind: native
   // <video> controls and the YouTube/Vimeo/Bunny iframes each rely on their
@@ -492,16 +575,23 @@ export default function VideoPlayerPage() {
               allowFullScreen
             />
           ) : embed?.kind === 'bunny-iframe' ? (
-            // Bunny Stream's Player.js bridge supplies play/pause/ended events
-            // for accurate watch-session timing across the iframe boundary.
-            <iframe
-              ref={bunnyIframeRef}
-              src={safeUrl(embed.src)}
-              title={videoData?.title || 'فيديو'}
-              className="w-full h-full border-0 absolute inset-0"
-              allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
-              allowFullScreen
-            />
+            // Do not mount Bunny's iframe until Player.js is loaded.
+            bunnyApiReady ? (
+              <iframe
+                key={videoId}
+                ref={bunnyIframeRef}
+                src={safeUrl(embed.src)}
+                title={videoData?.title || 'فيديو'}
+                className="w-full h-full border-0 absolute inset-0"
+                allow="autoplay; accelerometer; encrypted-media; picture-in-picture; fullscreen"
+                allowFullScreen
+                onLoad={() => setBunnyIframeLoaded(true)}
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center text-white/70">
+                <Loader2 className="w-8 h-8 animate-spin" />
+              </div>
+            )
           ) : (
             <video
               ref={videoRef}
