@@ -87,6 +87,10 @@ jobs:
             require $argv[1] . "/vendor/autoload.php";
             $env = Dotenv\Dotenv::parse(file_get_contents($argv[2]));
             $key = $argv[3];
+            if ($key === "DB_PORT" && !array_key_exists($key, $env)) {
+                echo "3306";
+                exit(0);
+            }
             if (!array_key_exists($key, $env)) {
                 fwrite(STDERR, "Missing database setting: $key\n");
                 exit(20);
@@ -110,6 +114,13 @@ jobs:
           php artisan migrate --pretend --path="database/migrations/${MIGRATION}.php" --force
 
           echo "=== CHECK TARGET TABLE AND DEPENDENCIES ==="
+          DEPENDENCY_STATE=$(MYSQL_PWD="$DB_PASSWORD" "$MYSQL_BIN" \
+            --host="$DB_HOST" --port="$DB_PORT" --user="$DB_USERNAME" \
+            --batch --skip-column-names "$DB_NAME" -e "SELECT IF(\
+              (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='students' AND column_name='user_id')=1 \
+              AND (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='content_items' AND column_name='id')=1, 1, 0)")
+          test "$DEPENDENCY_STATE" = "1" || { echo "Foreign key target columns are missing"; exit 24; }
+
           MYSQL_PWD="$DB_PASSWORD" "$MYSQL_BIN" \
             --host="$DB_HOST" --port="$DB_PORT" --user="$DB_USERNAME" \
             --batch --skip-column-names "$DB_NAME" <<SQL
@@ -136,9 +147,8 @@ jobs:
             -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='video_watch_sessions'")
           test "$TABLE_STATE" = "0" || { echo "Target table already exists; refusing to guess its state"; exit 22; }
 
-          MIGRATION_STATE=$(php artisan migrate:status --no-ansi | grep "$MIGRATION" || true)
-          if [ -n "$MIGRATION_STATE" ]; then
-            echo "Migration already recorded; refusing duplicate execution"
+          if php artisan migrate:status --no-ansi | grep "$MIGRATION" | grep -q 'Ran'; then
+            echo "Migration already recorded as Ran; refusing duplicate execution"
             exit 23
           fi
 
