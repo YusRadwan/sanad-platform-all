@@ -59,8 +59,8 @@ jobs:
 
       - name: Configure SSH
         env:
-          SSH_PRIVATE_KEY_B64: \${{ secrets.HOSTINGER_SSH_PRIVATE_KEY_B64 }}
-          SSH_KNOWN_HOSTS: \${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
+          SSH_PRIVATE_KEY_B64: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY_B64 }}
+          SSH_KNOWN_HOSTS: ${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
         run: |
           set -e
           mkdir -p ~/.ssh
@@ -78,9 +78,9 @@ jobs:
 
       - name: Upload backend package
         env:
-          SSH_HOST: \${{ secrets.HOSTINGER_SSH_HOST }}
-          SSH_PORT: \${{ secrets.HOSTINGER_SSH_PORT }}
-          SSH_USER: \${{ secrets.HOSTINGER_SSH_USER }}
+          SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
         run: |
           set -e
           case "$SSH_HOST" in *[!A-Za-z0-9.-]*) echo "Invalid SSH host"; exit 2;; esac
@@ -93,9 +93,9 @@ jobs:
 
       - name: Deploy backend source and dependencies
         env:
-          SSH_HOST: \${{ secrets.HOSTINGER_SSH_HOST }}
-          SSH_PORT: \${{ secrets.HOSTINGER_SSH_PORT }}
-          SSH_USER: \${{ secrets.HOSTINGER_SSH_USER }}
+          SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
         run: |
           set -e
           ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \
