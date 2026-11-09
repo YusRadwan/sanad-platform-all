@@ -12,34 +12,50 @@ jobs:
     steps:
       - name: Configure SSH
         env:
-          SSH_PRIVATE_KEY_B64: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY_B64 }}
-          SSH_KNOWN_HOSTS: ${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
+          SSH_PRIVATE_KEY_B64: \${{ secrets.HOSTINGER_SSH_PRIVATE_KEY_B64 }}
+          SSH_KNOWN_HOSTS: \${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
         run: |
+          set -e
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           printf '%s' "$SSH_PRIVATE_KEY_B64" | base64 --decode > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          printf '%s\\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
           ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null
 
       - name: Read-only production inspection
         env:
-          SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
-          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
-          SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          SSH_HOST: \${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: \${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: \${{ secrets.HOSTINGER_SSH_USER }}
         run: |
-          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \\
-            -o BatchMode=yes -o StrictHostKeyChecking=yes \\
-            "$SSH_USER@$SSH_HOST" 'bash -s' <<'REMOTE'
+          set -e
+          test -n "$SSH_HOST"
+          test -n "$SSH_PORT"
+          test -n "$SSH_USER"
+          case "$SSH_HOST" in
+            *[!A-Za-z0-9.-]*)
+              echo "SSH_HOST secret must contain only a hostname (no scheme, path, spaces, or port)."
+              exit 2
+              ;;
+          esac
+          case "$SSH_PORT" in
+            *[!0-9]*)
+              echo "SSH_PORT secret must be numeric."
+              exit 2
+              ;;
+          esac
+
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes "$SSH_USER@$SSH_HOST" 'bash -s' <<'REMOTE'
           set +e
           BACKEND="$HOME/sanad-platform-all/backend"
           PUBLIC="$HOME/domains/orchid-gerbil-115887.hostingersite.com/public_html"
 
           echo "=== PATH CHECKS ==="
-          printf 'HOME=%s\\n' "$HOME"
+          printf 'HOME=%s\n' "$HOME"
           for path in "$BACKEND" "$PUBLIC" "$BACKEND/artisan" "$BACKEND/.env" "$BACKEND/vendor/autoload.php" "$PUBLIC/api.php" "$PUBLIC/index.php"; do
-            if [ -e "$path" ]; then printf 'EXISTS %s\\n' "$path"; else printf 'MISSING %s\\n' "$path"; fi
+            if [ -e "$path" ]; then printf 'EXISTS %s\n' "$path"; else printf 'MISSING %s\n' "$path"; fi
           done
 
           echo "=== RUNTIME VERSIONS ==="
@@ -66,6 +82,6 @@ jobs:
 
           echo "=== STORAGE PRESERVATION CHECK ==="
           for path in "$BACKEND/storage/uploads" "$BACKEND/storage/logs" "$BACKEND/storage/framework"; do
-            if [ -d "$path" ]; then printf 'EXISTS %s\\n' "$path"; else printf 'MISSING %s\\n' "$path"; fi
+            if [ -d "$path" ]; then printf 'EXISTS %s\n' "$path"; else printf 'MISSING %s\n' "$path"; fi
           done
           REMOTE
