@@ -16,8 +16,8 @@ jobs:
     steps:
       - name: Configure SSH
         env:
-          SSH_PRIVATE_KEY_B64: \${{ secrets.HOSTINGER_SSH_PRIVATE_KEY_B64 }}
-          SSH_KNOWN_HOSTS: \${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
+          SSH_PRIVATE_KEY_B64: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY_B64 }}
+          SSH_KNOWN_HOSTS: ${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
         run: |
           set -e
           mkdir -p ~/.ssh
@@ -35,9 +35,9 @@ jobs:
 
       - name: Create and verify production backups
         env:
-          SSH_HOST: \${{ secrets.HOSTINGER_SSH_HOST }}
-          SSH_PORT: \${{ secrets.HOSTINGER_SSH_PORT }}
-          SSH_USER: \${{ secrets.HOSTINGER_SSH_USER }}
+          SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
         run: |
           set -e
           test -n "$SSH_HOST"
