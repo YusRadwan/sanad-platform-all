@@ -46,7 +46,7 @@ jobs:
       - name: Package backend source (preserve server state)
         run: |
           set -e
-          tar -czf "/tmp/sanad-backend-\${GITHUB_RUN_ID}.tar.gz" \
+          tar -czf "/tmp/sanad-backend-${GITHUB_RUN_ID}.tar.gz" \
             --exclude='./.env' \
             --exclude='./vendor' \
             --exclude='./storage' \
@@ -54,7 +54,7 @@ jobs:
             --exclude='./public/storage' \
             --exclude='./.git' \
             -C backend .
-          tar -tzf "/tmp/sanad-backend-\${GITHUB_RUN_ID}.tar.gz" >/dev/null
+          tar -tzf "/tmp/sanad-backend-${GITHUB_RUN_ID}.tar.gz" >/dev/null
           echo "BACKEND_PACKAGE_VERIFIED"
 
       - name: Configure SSH
@@ -85,10 +85,14 @@ jobs:
           set -e
           case "$SSH_HOST" in *[!A-Za-z0-9.-]*) echo "Invalid SSH host"; exit 2;; esac
           case "$SSH_PORT" in *[!0-9]*) echo "Invalid SSH port"; exit 2;; esac
-          REMOTE_UPLOAD="$HOME/sanad-backend-\${GITHUB_RUN_ID}.tar.gz"
+          REMOTE_HOME=$(ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \
+            -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" 'printf "%s" "$HOME"')
+          test -n "$REMOTE_HOME"
+          REMOTE_UPLOAD="$REMOTE_HOME/sanad-backend-${GITHUB_RUN_ID}.tar.gz"
           scp -i ~/.ssh/deploy_key -P "$SSH_PORT" \
             -o BatchMode=yes -o StrictHostKeyChecking=yes \
-            "/tmp/sanad-backend-\${GITHUB_RUN_ID}.tar.gz" \
+            "/tmp/sanad-backend-${GITHUB_RUN_ID}.tar.gz" \
             "$SSH_USER@$SSH_HOST:$REMOTE_UPLOAD"
 
       - name: Deploy backend source and dependencies
@@ -100,7 +104,7 @@ jobs:
           set -e
           ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \
             -o BatchMode=yes -o StrictHostKeyChecking=yes \
-            "$SSH_USER@$SSH_HOST" "bash -s -- '\${GITHUB_RUN_ID}'" <<'REMOTE'
+            "$SSH_USER@$SSH_HOST" "bash -s -- '${GITHUB_RUN_ID}'" <<'REMOTE'
           set -Eeuo pipefail
           RUN_ID="$1"
           BACKEND="$HOME/sanad-platform-all/backend"
