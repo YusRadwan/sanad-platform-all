@@ -78,7 +78,7 @@ jobs:
           test -f "$BACKEND/artisan"
           test -f "$BACKEND/.env"
           test -f "$BACKEND/vendor/autoload.php"
-          test -f "$BACKEND/database/migrations/\${MIGRATION}.php"
+          test -f "$BACKEND/database/migrations/${MIGRATION}.php"
           test -n "$DUMP_BIN" || { echo "mysqldump/mariadb-dump unavailable; refusing migration"; exit 10; }
           test -n "$MYSQL_BIN" || { echo "mysql/mariadb client unavailable; refusing migration"; exit 11; }
 
@@ -107,7 +107,7 @@ jobs:
           echo "=== MIGRATION PRECHECK ==="
           cd "$BACKEND"
           php artisan migrate:status --no-ansi
-          php artisan migrate --pretend --path="database/migrations/\${MIGRATION}.php" --force
+          php artisan migrate --pretend --path="database/migrations/${MIGRATION}.php" --force
 
           echo "=== CHECK TARGET TABLE AND DEPENDENCIES ==="
           MYSQL_PWD="$DB_PASSWORD" "$MYSQL_BIN" \
@@ -157,7 +157,7 @@ jobs:
           echo "DATABASE_BACKUP=$BACKUP"
 
           echo "=== RUN ONLY VIDEO WATCH SESSIONS MIGRATION ==="
-          php artisan migrate --path="database/migrations/\${MIGRATION}.php" --force --no-interaction
+          php artisan migrate --path="database/migrations/${MIGRATION}.php" --force --no-interaction
 
           echo "=== VERIFY MIGRATION ==="
           php artisan migrate:status --no-ansi | grep "$MIGRATION"
