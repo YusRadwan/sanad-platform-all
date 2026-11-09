@@ -1,0 +1,121 @@
+name: Backup Sanad Production
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sanad-production-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY_B64: \${{ secrets.HOSTINGER_SSH_PRIVATE_KEY_B64 }}
+          SSH_KNOWN_HOSTS: \${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
+        run: |
+          set -e
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          if printf '%s' "$SSH_PRIVATE_KEY_B64" | grep -q -- '-----BEGIN .*PRIVATE KEY-----'; then
+            printf '%s\n' "$SSH_PRIVATE_KEY_B64" | tr -d '\r' > ~/.ssh/deploy_key
+          else
+            NORMALIZED_KEY=$(printf '%s' "$SSH_PRIVATE_KEY_B64" | tr -d '[:space:]')
+            printf '%s' "$NORMALIZED_KEY" | base64 --decode > ~/.ssh/deploy_key
+          fi
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null
+
+      - name: Create and verify production backups
+        env:
+          SSH_HOST: \${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: \${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: \${{ secrets.HOSTINGER_SSH_USER }}
+        run: |
+          set -e
+          test -n "$SSH_HOST"
+          test -n "$SSH_PORT"
+          test -n "$SSH_USER"
+          case "$SSH_HOST" in *[!A-Za-z0-9.-]*) echo "Invalid SSH host secret format"; exit 2;; esac
+          case "$SSH_PORT" in *[!0-9]*) echo "Invalid SSH port secret format"; exit 2;; esac
+
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \
+            -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" "bash -s -- '$GITHUB_RUN_ID'" <<'REMOTE'
+          set -Eeuo pipefail
+          RUN_ID="$1"
+          BACKEND="$HOME/sanad-platform-all/backend"
+          PUBLIC="$HOME/domains/orchid-gerbil-115887.hostingersite.com/public_html"
+          BACKUP_DIR="$HOME/sanad-backups/sanad-production-$RUN_ID"
+          PHP_BIN="$(command -v php || true)"
+          DUMP_BIN="$(command -v mysqldump || command -v mariadb-dump || true)"
+
+          test -n "$PHP_BIN" || { echo "PHP CLI is unavailable"; exit 10; }
+          test -n "$DUMP_BIN" || { echo "Neither mysqldump nor mariadb-dump is available"; exit 11; }
+          test -f "$BACKEND/artisan" || { echo "Laravel artisan file is missing"; exit 12; }
+          test -f "$BACKEND/.env" || { echo "Backend .env is missing"; exit 13; }
+          test -f "$BACKEND/vendor/autoload.php" || { echo "Composer vendor directory is missing"; exit 14; }
+          test -d "$PUBLIC" || { echo "Production public_html is missing"; exit 15; }
+
+          mkdir -p "$BACKUP_DIR"
+          chmod 700 "$HOME/sanad-backups" "$BACKUP_DIR"
+          umask 077
+
+          echo "=== BACKUP PRECHECK ==="
+          df -h "$HOME"
+          du -sh "$BACKEND" "$PUBLIC"
+          echo "BACKUP_DESTINATION=$BACKUP_DIR"
+
+          CNF="$BACKUP_DIR/mysql-client.cnf"
+          DB_META="$BACKUP_DIR/database-name.txt"
+
+          php -r '
+          require $argv[1] . "/vendor/autoload.php";
+          $env = Dotenv\Dotenv::parse(file_get_contents($argv[2]));
+          foreach (["DB_HOST", "DB_PORT", "DB_DATABASE", "DB_USERNAME", "DB_PASSWORD"] as $key) {
+              if (!array_key_exists($key, $env)) {
+                  fwrite(STDERR, "Missing required database setting: $key\n");
+                  exit(20);
+              }
+          }
+          $quote = static function (string $value): string {
+              return "\"" . str_replace(["\\\\", "\"", "\n", "\r"], ["\\\\\\\\", "\\\\\"", "\\\\n", "\\\\r"], $value) . "\"";
+          };
+          $lines = ["[client]", "host=" . $quote($env["DB_HOST"]), "port=" . $quote($env["DB_PORT"]), "user=" . $quote($env["DB_USERNAME"]), "password=" . $quote($env["DB_PASSWORD"])];
+          if (!empty($env["DB_SOCKET"])) $lines[] = "socket=" . $quote($env["DB_SOCKET"]);
+          if (file_put_contents($argv[3], implode("\n", $lines) . "\n", LOCK_EX) === false) exit(21);
+          file_put_contents($argv[4], $env["DB_DATABASE"], LOCK_EX);
+          ' "$BACKEND" "$BACKEND/.env" "$CNF" "$DB_META"
+          chmod 600 "$CNF" "$DB_META"
+          DB_NAME="$(cat "$DB_META")"
+          test -n "$DB_NAME" || { echo "Database name is empty"; exit 22; }
+
+          echo "=== BACKING UP LARAVEL BACKEND (INCLUDING .ENV AND STORAGE) ==="
+          tar -czf "$BACKUP_DIR/backend.tar.gz" -C "$HOME/sanad-platform-all" backend
+          tar -tzf "$BACKUP_DIR/backend.tar.gz" > /dev/null
+
+          echo "=== BACKING UP PUBLIC_HTML ==="
+          tar -czf "$BACKUP_DIR/public_html.tar.gz" -C "$HOME/domains/orchid-gerbil-115887.hostingersite.com" public_html
+          tar -tzf "$BACKUP_DIR/public_html.tar.gz" > /dev/null
+
+          echo "=== BACKING UP DATABASE ==="
+          "$DUMP_BIN" --defaults-extra-file="$CNF" --single-transaction --routines --triggers --events --databases "$DB_NAME" \
+            | gzip -c > "$BACKUP_DIR/database.sql.gz"
+          gzip -t "$BACKUP_DIR/database.sql.gz"
+          test -s "$BACKUP_DIR/database.sql.gz"
+
+          rm -f "$CNF" "$DB_META"
+          chmod 600 "$BACKUP_DIR"/*.tar.gz "$BACKUP_DIR"/*.sql.gz
+
+          echo "=== BACKUP VERIFICATION ==="
+          ls -lh "$BACKUP_DIR"
+          echo "BACKUP_SUCCESS"
+          echo "BACKUP_PATH=$BACKUP_DIR"
+          REMOTE
