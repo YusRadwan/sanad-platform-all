@@ -376,11 +376,23 @@ export default function VideoPlayerPage() {
       if (!PlayerJs?.Player) return;
 
       player = new PlayerJs.Player(bunnyIframeRef.current);
+
+      // Register playback listeners only after Bunny's Player.js handshake.
+      // Some Bunny player versions emit timeupdate reliably while the play
+      // event can be missed during iframe initialization; timeupdate is a
+      // safe fallback because Player.js emits it during active playback.
       player.on('ready', () => {
         if (cancelled) return;
+
         player.on('play', () => startWatchSession());
+        player.on('timeupdate', () => {
+          if (!playbackActiveRef.current) startWatchSession();
+        });
         player.on('pause', () => stopWatchSession());
         player.on('ended', () => stopWatchSession());
+        player.on('error', (error: unknown) => {
+          logger.warn('Bunny player reported a playback error', error);
+        });
       });
     }).catch((err) => {
       logger.warn('Bunny player analytics could not be initialized', err);
