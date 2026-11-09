@@ -1,0 +1,176 @@
+name: Deploy Sanad Backend to Hostinger
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sanad-production-backend-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout production baseline
+        uses: actions/checkout@v4
+        with:
+          ref: test/video-providers
+
+      - name: Validate backend source
+        run: |
+          set -e
+          test -s backend/composer.json
+          test -s backend/composer.lock
+          test -s backend/artisan
+          echo "BACKEND_SOURCE_PRESENT"
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_mysql, xml, curl, zip, bcmath
+          tools: composer:v2
+
+      - name: Validate Composer lock
+        working-directory: backend
+        run: composer validate --no-check-publish --no-interaction
+
+      - name: Check PHP syntax
+        run: |
+          find backend/app backend/routes backend/database backend/bootstrap \
+            -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Package backend source (preserve server state)
+        run: |
+          set -e
+          tar -czf "/tmp/sanad-backend-\${GITHUB_RUN_ID}.tar.gz" \
+            --exclude='./.env' \
+            --exclude='./vendor' \
+            --exclude='./storage' \
+            --exclude='./bootstrap/cache' \
+            --exclude='./public/storage' \
+            --exclude='./.git' \
+            -C backend .
+          tar -tzf "/tmp/sanad-backend-\${GITHUB_RUN_ID}.tar.gz" >/dev/null
+          echo "BACKEND_PACKAGE_VERIFIED"
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY_B64: \${{ secrets.HOSTINGER_SSH_PRIVATE_KEY_B64 }}
+          SSH_KNOWN_HOSTS: \${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
+        run: |
+          set -e
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          if printf '%s' "$SSH_PRIVATE_KEY_B64" | grep -q -- '-----BEGIN .*PRIVATE KEY-----'; then
+            printf '%s\n' "$SSH_PRIVATE_KEY_B64" | tr -d '\r' > ~/.ssh/deploy_key
+          else
+            NORMALIZED_KEY=$(printf '%s' "$SSH_PRIVATE_KEY_B64" | tr -d '[:space:]')
+            printf '%s' "$NORMALIZED_KEY" | base64 --decode > ~/.ssh/deploy_key
+          fi
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          ssh-keygen -y -f ~/.ssh/deploy_key >/dev/null
+
+      - name: Upload backend package
+        env:
+          SSH_HOST: \${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: \${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: \${{ secrets.HOSTINGER_SSH_USER }}
+        run: |
+          set -e
+          case "$SSH_HOST" in *[!A-Za-z0-9.-]*) echo "Invalid SSH host"; exit 2;; esac
+          case "$SSH_PORT" in *[!0-9]*) echo "Invalid SSH port"; exit 2;; esac
+          REMOTE_UPLOAD="$HOME/sanad-backend-\${GITHUB_RUN_ID}.tar.gz"
+          scp -i ~/.ssh/deploy_key -P "$SSH_PORT" \
+            -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "/tmp/sanad-backend-\${GITHUB_RUN_ID}.tar.gz" \
+            "$SSH_USER@$SSH_HOST:$REMOTE_UPLOAD"
+
+      - name: Deploy backend source and dependencies
+        env:
+          SSH_HOST: \${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: \${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: \${{ secrets.HOSTINGER_SSH_USER }}
+        run: |
+          set -e
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \
+            -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" "bash -s -- '\${GITHUB_RUN_ID}'" <<'REMOTE'
+          set -Eeuo pipefail
+          RUN_ID="$1"
+          BACKEND="$HOME/sanad-platform-all/backend"
+          UPLOAD="$HOME/sanad-backend-$RUN_ID.tar.gz"
+          BACKUP_DIR="$HOME/sanad-backups"
+          BACKUP="$BACKUP_DIR/backend-before-deploy-$RUN_ID.tar.gz"
+
+          test -f "$BACKEND/artisan"
+          test -f "$BACKEND/.env"
+          test -f "$BACKEND/vendor/autoload.php"
+          test -f "$UPLOAD"
+          command -v php >/dev/null
+          command -v composer >/dev/null
+          php -v | head -n 1
+
+          mkdir -p "$BACKUP_DIR"
+          chmod 700 "$BACKUP_DIR"
+          umask 077
+
+          echo "=== CREATE PRE-DEPLOY BACKEND BACKUP ==="
+          tar -czf "$BACKUP" -C "$HOME/sanad-platform-all" backend
+          tar -tzf "$BACKUP" >/dev/null
+          test -s "$BACKUP"
+          echo "BACKEND_BACKUP=$BACKUP"
+
+          restore_backend() {
+            status=$?
+            if [ "$status" -ne 0 ]; then
+              echo "DEPLOY_FAILED_RESTORING_BACKEND"
+              tar -xzf "$BACKUP" -C "$HOME/sanad-platform-all"
+              echo "BACKEND_ROLLBACK_COMPLETED"
+            fi
+            rm -f "$UPLOAD"
+            exit "$status"
+          }
+          trap restore_backend EXIT
+
+          echo "=== APPLY BACKEND SOURCE (ENV, VENDOR, STORAGE PRESERVED) ==="
+          tar -xzf "$UPLOAD" -C "$BACKEND"
+          test -f "$BACKEND/.env"
+          test -d "$BACKEND/storage"
+          test -d "$BACKEND/vendor"
+
+          echo "=== INSTALL LOCKED PRODUCTION DEPENDENCIES ==="
+          composer install \
+            --working-dir="$BACKEND" \
+            --no-dev \
+            --no-interaction \
+            --prefer-dist \
+            --optimize-autoloader \
+            --no-progress
+
+          echo "=== CLEAR LARAVEL CACHES ==="
+          cd "$BACKEND"
+          php artisan optimize:clear --no-interaction
+
+          echo "=== BACKEND POST-DEPLOY CHECKS ==="
+          php artisan --version
+          test -f app/Models/VideoWatchSession.php
+          test -f app/Actions/Lesson/RecordVideoWatchSession.php
+          test -f database/migrations/2026_11_08_000001_create_video_watch_sessions_table.php
+          test -f vendor/autoload.php
+          echo "BACKEND_DEPLOY_SUCCESS"
+          echo "DATABASE_MIGRATIONS_NOT_RUN"
+          trap - EXIT
+          rm -f "$UPLOAD"
+          REMOTE
+
+      - name: Backend deployment summary
+        run: |
+          echo "Backend source and production Composer dependencies deployed."
+          echo "The .env file, storage directory, and public_html were excluded from the upload."
+          echo "No database migrations were executed."
