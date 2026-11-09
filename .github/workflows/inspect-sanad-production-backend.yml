@@ -1,0 +1,71 @@
+name: Inspect Sanad Production Backend
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY_B64: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY_B64 }}
+          SSH_KNOWN_HOSTS: ${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s' "$SSH_PRIVATE_KEY_B64" | base64 --decode > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null
+
+      - name: Read-only production inspection
+        env:
+          SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \\
+            -o BatchMode=yes -o StrictHostKeyChecking=yes \\
+            "$SSH_USER@$SSH_HOST" 'bash -s' <<'REMOTE'
+          set +e
+          BACKEND="$HOME/sanad-platform-all/backend"
+          PUBLIC="$HOME/domains/orchid-gerbil-115887.hostingersite.com/public_html"
+
+          echo "=== PATH CHECKS ==="
+          printf 'HOME=%s\\n' "$HOME"
+          for path in "$BACKEND" "$PUBLIC" "$BACKEND/artisan" "$BACKEND/.env" "$BACKEND/vendor/autoload.php" "$PUBLIC/api.php" "$PUBLIC/index.php"; do
+            if [ -e "$path" ]; then printf 'EXISTS %s\\n' "$path"; else printf 'MISSING %s\\n' "$path"; fi
+          done
+
+          echo "=== RUNTIME VERSIONS ==="
+          if command -v php >/dev/null 2>&1; then php -v | head -n 2; else echo "PHP_CLI_NOT_ON_PATH"; fi
+          if command -v composer >/dev/null 2>&1; then composer --version; else echo "COMPOSER_NOT_ON_PATH"; fi
+
+          echo "=== BACKEND SOURCE ==="
+          if [ -d "$BACKEND/.git" ]; then
+            git -C "$BACKEND" branch --show-current
+            git -C "$BACKEND" rev-parse --short HEAD
+            git -C "$BACKEND" status --short
+          else
+            echo "BACKEND_DIRECTORY_IS_NOT_A_GIT_CHECKOUT"
+          fi
+
+          echo "=== LARAVEL CLI / MIGRATION STATUS (READ ONLY) ==="
+          if [ -f "$BACKEND/artisan" ] && [ -f "$BACKEND/vendor/autoload.php" ] && command -v php >/dev/null 2>&1; then
+            cd "$BACKEND"
+            php artisan --version
+            php artisan migrate:status --no-ansi
+          else
+            echo "SKIPPED_ARTISAN_CHECK_MISSING_RUNTIME_OR_FILES"
+          fi
+
+          echo "=== STORAGE PRESERVATION CHECK ==="
+          for path in "$BACKEND/storage/uploads" "$BACKEND/storage/logs" "$BACKEND/storage/framework"; do
+            if [ -d "$path" ]; then printf 'EXISTS %s\\n' "$path"; else printf 'MISSING %s\\n' "$path"; fi
+          done
+          REMOTE
