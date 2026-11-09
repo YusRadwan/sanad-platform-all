@@ -81,6 +81,14 @@ export function isBunnyIframeEmbedUrl(url: string): boolean {
  * upstream guarantees the two agree (see StoreContentItemDetailRequest).
  */
 export function resolveVideoEmbed(url: string, provider?: string | null): ResolvedVideoEmbed {
+  // The URL hostname is authoritative when it identifies a provider.
+  // Stored provider metadata can be stale or incorrectly selected in the
+  // admin form; Bunny's player.mediadelivery.net URL must never be treated
+  // as Vimeo merely because provider === 'Vimeo'.
+  if (isBunnyIframeEmbedUrl(url)) {
+    return { kind: 'bunny-iframe', src: url };
+  }
+
   const youtubeId = getYoutubeVideoId(url);
   if (youtubeId || provider === 'YouTube') {
     return { kind: 'youtube', src: getYoutubeEmbedUrl(url), youtubeVideoId: youtubeId ?? undefined };
@@ -89,10 +97,6 @@ export function resolveVideoEmbed(url: string, provider?: string | null): Resolv
   const vimeoId = getVimeoVideoId(url);
   if (vimeoId || provider === 'Vimeo') {
     return { kind: 'vimeo', src: getVimeoEmbedUrl(url), vimeoVideoId: vimeoId ?? undefined };
-  }
-
-  if (isBunnyIframeEmbedUrl(url)) {
-    return { kind: 'bunny-iframe', src: url };
   }
 
   // Bunny direct-media URL, or any other plain http(s) media file: native
