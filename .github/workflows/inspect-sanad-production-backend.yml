@@ -12,15 +12,14 @@ jobs:
     steps:
       - name: Configure SSH
         env:
-          SSH_PRIVATE_KEY_B64: \${{ secrets.HOSTINGER_SSH_PRIVATE_KEY_B64 }}
-          SSH_KNOWN_HOSTS: \${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
+          SSH_PRIVATE_KEY_B64: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY_B64 }}
+          SSH_KNOWN_HOSTS: ${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
         run: |
           set -e
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
 
           # Accept either a PEM key stored directly or a base64-encoded key.
-          # Normalize whitespace/CRLF without ever printing the secret.
           if printf '%s' "$SSH_PRIVATE_KEY_B64" | grep -q -- '-----BEGIN .*PRIVATE KEY-----'; then
             printf '%s\n' "$SSH_PRIVATE_KEY_B64" | tr -d '\r' > ~/.ssh/deploy_key
           else
@@ -31,16 +30,14 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           printf '%s\n' "$SSH_KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
-
-          # Validate the key locally before attempting the remote connection.
           ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null
           echo "SSH_KEY_VALID"
 
       - name: Read-only production inspection
         env:
-          SSH_HOST: \${{ secrets.HOSTINGER_SSH_HOST }}
-          SSH_PORT: \${{ secrets.HOSTINGER_SSH_PORT }}
-          SSH_USER: \${{ secrets.HOSTINGER_SSH_USER }}
+          SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
         run: |
           set -e
           test -n "$SSH_HOST"
@@ -48,7 +45,7 @@ jobs:
           test -n "$SSH_USER"
           case "$SSH_HOST" in
             *[!A-Za-z0-9.-]*)
-              echo "SSH_HOST secret must contain only a hostname (no scheme, path, spaces, or port)."
+              echo "SSH_HOST secret must contain only a hostname."
               exit 2
               ;;
           esac
