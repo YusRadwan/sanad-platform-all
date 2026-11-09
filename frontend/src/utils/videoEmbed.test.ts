@@ -12,6 +12,11 @@ describe('Bunny Stream embed detection', () => {
     expect(resolveVideoEmbed(url, 'Bunny').kind).toBe('bunny-iframe');
   });
 
+  it('prioritizes a Bunny embed URL over stale Vimeo provider metadata', () => {
+    const url = 'https://player.mediadelivery.net/embed/72101/0c6ba42c-965a-4f7b-9e35-000000000000';
+    expect(resolveVideoEmbed(url, 'Vimeo').kind).toBe('bunny-iframe');
+  });
+
   it('keeps Bunny direct media URLs on the native video player', () => {
     const url = 'https://example.b-cdn.net/path/video.mp4';
     expect(isBunnyIframeEmbedUrl(url)).toBe(false);
