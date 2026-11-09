@@ -1,0 +1,170 @@
+name: Run Video Watch Sessions Migration
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_production_migration:
+        description: "Confirm running the video_watch_sessions migration on the current Sanad database"
+        required: true
+        type: choice
+        options:
+          - "no"
+          - "yes"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sanad-production-database-migration
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    if: inputs.confirm_production_migration == 'yes'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout deployed baseline
+        uses: actions/checkout@v4
+        with:
+          ref: test/video-providers
+
+      - name: Configure PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_mysql, xml, curl, zip, bcmath
+          tools: composer:v2
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY_B64: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY_B64 }}
+          SSH_KNOWN_HOSTS: ${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
+        run: |
+          set -e
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          if printf '%s' "$SSH_PRIVATE_KEY_B64" | grep -q -- '-----BEGIN .*PRIVATE KEY-----'; then
+            printf '%s\n' "$SSH_PRIVATE_KEY_B64" | tr -d '\r' > ~/.ssh/deploy_key
+          else
+            NORMALIZED_KEY=$(printf '%s' "$SSH_PRIVATE_KEY_B64" | tr -d '[:space:]')
+            printf '%s' "$NORMALIZED_KEY" | base64 --decode > ~/.ssh/deploy_key
+          fi
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          ssh-keygen -y -f ~/.ssh/deploy_key >/dev/null
+
+      - name: Preflight, backup database, and run only the video watch migration
+        env:
+          SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+        run: |
+          set -e
+          case "$SSH_HOST" in *[!A-Za-z0-9.-]*) echo "Invalid SSH host"; exit 2;; esac
+          case "$SSH_PORT" in *[!0-9]*) echo "Invalid SSH port"; exit 2;; esac
+
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \
+            -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" 'bash -s' <<'REMOTE'
+          set -Eeuo pipefail
+          BACKEND="$HOME/sanad-platform-all/backend"
+          BACKUP_DIR="$HOME/sanad-backups"
+          MIGRATION="2026_11_08_000001_create_video_watch_sessions_table"
+          PHP_BIN="$(command -v php)"
+          DUMP_BIN="$(command -v mysqldump || command -v mariadb-dump || true)"
+          MYSQL_BIN="$(command -v mysql || command -v mariadb || true)"
+
+          test -f "$BACKEND/artisan"
+          test -f "$BACKEND/.env"
+          test -f "$BACKEND/vendor/autoload.php"
+          test -f "$BACKEND/database/migrations/\${MIGRATION}.php"
+          test -n "$DUMP_BIN" || { echo "mysqldump/mariadb-dump unavailable; refusing migration"; exit 10; }
+          test -n "$MYSQL_BIN" || { echo "mysql/mariadb client unavailable; refusing migration"; exit 11; }
+
+          read_env() {
+            "$PHP_BIN" -r '
+            require $argv[1] . "/vendor/autoload.php";
+            $env = Dotenv\Dotenv::parse(file_get_contents($argv[2]));
+            $key = $argv[3];
+            if (!array_key_exists($key, $env)) {
+                fwrite(STDERR, "Missing database setting: $key\n");
+                exit(20);
+            }
+            echo $env[$key];
+            ' "$BACKEND" "$BACKEND/.env" "$1"
+          }
+
+          DB_HOST="$(read_env DB_HOST)"
+          DB_PORT="$(read_env DB_PORT)"
+          DB_NAME="$(read_env DB_DATABASE)"
+          DB_USERNAME="$(read_env DB_USERNAME)"
+          DB_PASSWORD="$(read_env DB_PASSWORD)"
+          test -n "$DB_HOST" && test -n "$DB_PORT" && test -n "$DB_NAME" && test -n "$DB_USERNAME" || {
+            echo "Required database setting is empty"; exit 21;
+          }
+
+          echo "=== MIGRATION PRECHECK ==="
+          cd "$BACKEND"
+          php artisan migrate:status --no-ansi
+          php artisan migrate --pretend --path="database/migrations/\${MIGRATION}.php" --force
+
+          echo "=== CHECK TARGET TABLE AND DEPENDENCIES ==="
+          MYSQL_PWD="$DB_PASSWORD" "$MYSQL_BIN" \
+            --host="$DB_HOST" --port="$DB_PORT" --user="$DB_USERNAME" \
+            --batch --skip-column-names "$DB_NAME" <<SQL
+          SELECT IF(
+            (SELECT COUNT(*) FROM information_schema.tables
+             WHERE table_schema = DATABASE() AND table_name = 'video_watch_sessions') = 0,
+            'TARGET_TABLE_ABSENT',
+            'TARGET_TABLE_ALREADY_EXISTS'
+          );
+          SELECT IF(
+            (SELECT COUNT(*) FROM information_schema.columns
+             WHERE table_schema = DATABASE() AND table_name = 'students' AND column_name = 'user_id') = 1
+            AND
+            (SELECT COUNT(*) FROM information_schema.columns
+             WHERE table_schema = DATABASE() AND table_name = 'content_items' AND column_name = 'id') = 1,
+            'FOREIGN_KEY_TARGET_COLUMNS_EXIST',
+            'FOREIGN_KEY_TARGET_COLUMNS_MISSING'
+          );
+          SQL
+
+          TABLE_STATE=$(MYSQL_PWD="$DB_PASSWORD" "$MYSQL_BIN" \
+            --host="$DB_HOST" --port="$DB_PORT" --user="$DB_USERNAME" \
+            --batch --skip-column-names "$DB_NAME" \
+            -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='video_watch_sessions'")
+          test "$TABLE_STATE" = "0" || { echo "Target table already exists; refusing to guess its state"; exit 22; }
+
+          MIGRATION_STATE=$(php artisan migrate:status --no-ansi | grep "$MIGRATION" || true)
+          if [ -n "$MIGRATION_STATE" ]; then
+            echo "Migration already recorded; refusing duplicate execution"
+            exit 23
+          fi
+
+          echo "=== CREATE FRESH DATABASE BACKUP ==="
+          mkdir -p "$BACKUP_DIR"
+          chmod 700 "$BACKUP_DIR"
+          umask 077
+          BACKUP="$BACKUP_DIR/database-before-video-watch-migration-$(date +%Y%m%d-%H%M%S).sql.gz"
+          MYSQL_PWD="$DB_PASSWORD" "$DUMP_BIN" \
+            --host="$DB_HOST" --port="$DB_PORT" --user="$DB_USERNAME" \
+            --single-transaction --routines --triggers --events --databases "$DB_NAME" \
+            | gzip -c > "$BACKUP"
+          gzip -t "$BACKUP"
+          test -s "$BACKUP"
+          chmod 600 "$BACKUP"
+          echo "DATABASE_BACKUP=$BACKUP"
+
+          echo "=== RUN ONLY VIDEO WATCH SESSIONS MIGRATION ==="
+          php artisan migrate --path="database/migrations/\${MIGRATION}.php" --force --no-interaction
+
+          echo "=== VERIFY MIGRATION ==="
+          php artisan migrate:status --no-ansi | grep "$MIGRATION"
+          MYSQL_PWD="$DB_PASSWORD" "$MYSQL_BIN" \
+            --host="$DB_HOST" --port="$DB_PORT" --user="$DB_USERNAME" \
+            --batch --skip-column-names "$DB_NAME" \
+            -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='video_watch_sessions'" \
+            | grep -qx '1'
+          echo "VIDEO_WATCH_MIGRATION_SUCCESS"
+          REMOTE
