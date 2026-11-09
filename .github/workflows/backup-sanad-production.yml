@@ -73,29 +73,28 @@ jobs:
           du -sh "$BACKEND" "$PUBLIC"
           echo "BACKUP_DESTINATION=$BACKUP_DIR"
 
-          CNF="$BACKUP_DIR/mysql-client.cnf"
-          DB_META="$BACKUP_DIR/database-name.txt"
-
-          php -r '
-          require $argv[1] . "/vendor/autoload.php";
-          $env = Dotenv\Dotenv::parse(file_get_contents($argv[2]));
-          foreach (["DB_HOST", "DB_PORT", "DB_DATABASE", "DB_USERNAME", "DB_PASSWORD"] as $key) {
-              if (!array_key_exists($key, $env)) {
-                  fwrite(STDERR, "Missing required database setting: $key\n");
-                  exit(20);
-              }
+          read_env() {
+            "$PHP_BIN" -r '
+            require $argv[1] . "/vendor/autoload.php";
+            $env = Dotenv\\Dotenv::parse(file_get_contents($argv[2]));
+            $key = $argv[3];
+            if (!array_key_exists($key, $env)) {
+                fwrite(STDERR, "Missing required database setting: $key\\n");
+                exit(20);
+            }
+            echo $env[$key];
+            ' "$BACKEND" "$BACKEND/.env" "$1"
           }
-          $quote = static function (string $value): string {
-              return "\"" . str_replace(["\\\\", "\"", "\n", "\r"], ["\\\\\\\\", "\\\\\"", "\\\\n", "\\\\r"], $value) . "\"";
-          };
-          $lines = ["[client]", "host=" . $quote($env["DB_HOST"]), "port=" . $quote($env["DB_PORT"]), "user=" . $quote($env["DB_USERNAME"]), "password=" . $quote($env["DB_PASSWORD"])];
-          if (!empty($env["DB_SOCKET"])) $lines[] = "socket=" . $quote($env["DB_SOCKET"]);
-          if (file_put_contents($argv[3], implode("\n", $lines) . "\n", LOCK_EX) === false) exit(21);
-          file_put_contents($argv[4], $env["DB_DATABASE"], LOCK_EX);
-          ' "$BACKEND" "$BACKEND/.env" "$CNF" "$DB_META"
-          chmod 600 "$CNF" "$DB_META"
-          DB_NAME="$(cat "$DB_META")"
-          test -n "$DB_NAME" || { echo "Database name is empty"; exit 22; }
+
+          DB_HOST="$(read_env DB_HOST)"
+          DB_PORT="$(read_env DB_PORT)"
+          DB_NAME="$(read_env DB_DATABASE)"
+          DB_USERNAME="$(read_env DB_USERNAME)"
+          DB_PASSWORD="$(read_env DB_PASSWORD)"
+          test -n "$DB_HOST" && test -n "$DB_PORT" && test -n "$DB_NAME" && test -n "$DB_USERNAME" || {
+            echo "A required database connection setting is empty"
+            exit 22
+          }
 
           echo "=== BACKING UP LARAVEL BACKEND (INCLUDING .ENV AND STORAGE) ==="
           tar -czf "$BACKUP_DIR/backend.tar.gz" -C "$HOME/sanad-platform-all" backend
@@ -106,12 +105,11 @@ jobs:
           tar -tzf "$BACKUP_DIR/public_html.tar.gz" > /dev/null
 
           echo "=== BACKING UP DATABASE ==="
-          "$DUMP_BIN" --defaults-extra-file="$CNF" --single-transaction --routines --triggers --events --databases "$DB_NAME" \
+          MYSQL_PWD="$DB_PASSWORD" "$DUMP_BIN" --host="$DB_HOST" --port="$DB_PORT" --user="$DB_USERNAME" --single-transaction --routines --triggers --events --databases "$DB_NAME" \
             | gzip -c > "$BACKUP_DIR/database.sql.gz"
           gzip -t "$BACKUP_DIR/database.sql.gz"
           test -s "$BACKUP_DIR/database.sql.gz"
 
-          rm -f "$CNF" "$DB_META"
           chmod 600 "$BACKUP_DIR"/*.tar.gz "$BACKUP_DIR"/*.sql.gz
 
           echo "=== BACKUP VERIFICATION ==="
