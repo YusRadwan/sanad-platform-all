@@ -1,0 +1,83 @@
+name: Inspect Sanad Backend Deployment Layout
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY_B64: \${{ secrets.HOSTINGER_SSH_PRIVATE_KEY_B64 }}
+          SSH_KNOWN_HOSTS: \${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
+        run: |
+          set -e
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          if printf '%s' "$SSH_PRIVATE_KEY_B64" | grep -q -- '-----BEGIN .*PRIVATE KEY-----'; then
+            printf '%s\n' "$SSH_PRIVATE_KEY_B64" | tr -d '\r' > ~/.ssh/deploy_key
+          else
+            NORMALIZED_KEY=$(printf '%s' "$SSH_PRIVATE_KEY_B64" | tr -d '[:space:]')
+            printf '%s' "$NORMALIZED_KEY" | base64 --decode > ~/.ssh/deploy_key
+          fi
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null
+
+      - name: Inspect deployment paths and Laravel files (read only)
+        env:
+          SSH_HOST: \${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: \${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: \${{ secrets.HOSTINGER_SSH_USER }}
+        run: |
+          set -e
+          case "$SSH_HOST" in *[!A-Za-z0-9.-]*) echo "Invalid SSH host"; exit 2;; esac
+          case "$SSH_PORT" in *[!0-9]*) echo "Invalid SSH port"; exit 2;; esac
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes "$SSH_USER@$SSH_HOST" 'bash -s' <<'REMOTE'
+          set +e
+          BACKEND="$HOME/sanad-platform-all/backend"
+          PUBLIC="$HOME/domains/orchid-gerbil-115887.hostingersite.com/public_html"
+
+          echo "=== PUBLIC ENTRYPOINT METADATA ==="
+          for file in "$PUBLIC/api.php" "$PUBLIC/index.php" "$PUBLIC/.htaccess"; do
+            if [ -e "$file" ]; then
+              ls -l "$file"
+              readlink -f "$file"
+              stat -c 'size=%s bytes mode=%a modified=%y' "$file"
+            else
+              echo "MISSING $file"
+            fi
+          done
+
+          echo "=== PUBLIC API ENTRYPOINT (FIRST 100 LINES) ==="
+          if [ -f "$PUBLIC/api.php" ]; then sed -n '1,100p' "$PUBLIC/api.php"; fi
+          echo "=== PUBLIC INDEX ENTRYPOINT (FIRST 100 LINES) ==="
+          if [ -f "$PUBLIC/index.php" ]; then sed -n '1,100p' "$PUBLIC/index.php"; fi
+          echo "=== PUBLIC HTACCESS (FIRST 160 LINES) ==="
+          if [ -f "$PUBLIC/.htaccess" ]; then sed -n '1,160p' "$PUBLIC/.htaccess"; fi
+
+          echo "=== CURRENT BACKEND SOURCE MARKERS ==="
+          for file in \
+            "$BACKEND/app/Models/VideoWatchSession.php" \
+            "$BACKEND/app/Actions/Lesson/RecordVideoWatchSession.php" \
+            "$BACKEND/database/migrations/2026_11_08_000001_create_video_watch_sessions_table.php" \
+            "$BACKEND/app/Actions/Lesson/BuildVideoWatchStatisticsReport.php"; do
+            if [ -f "$file" ]; then echo "EXISTS $file"; else echo "MISSING $file"; fi
+          done
+
+          echo "=== CURRENT BACKEND PUBLIC CONFIG ==="
+          for file in "$BACKEND/public/index.php" "$BACKEND/public/.htaccess" "$BACKEND/bootstrap/app.php"; do
+            if [ -f "$file" ]; then echo "EXISTS $file"; else echo "MISSING $file"; fi
+          done
+
+          echo "=== PHP EXTENSIONS ==="
+          php -m | grep -Ei '^(curl|fileinfo|mbstring|openssl|pdo|pdo_mysql|tokenizer|xml|ctype|json|bcmath|zip)$' || true
+
+          echo "=== BACKEND FILE PERMISSIONS ==="
+          stat -c '%A %a %U:%G %n' "$BACKEND" "$BACKEND/.env" "$BACKEND/storage" "$BACKEND/bootstrap/cache" 2>/dev/null || true
+          REMOTE
