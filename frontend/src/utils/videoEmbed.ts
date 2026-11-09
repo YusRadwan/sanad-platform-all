@@ -63,7 +63,11 @@ export function isBunnyIframeEmbedUrl(url: string): boolean {
   if (!url) return false;
   try {
     const host = new URL(url).hostname;
-    return host === 'iframe.mediadelivery.net' || host === 'iframe.b-cdn.net';
+    return (
+      host === 'player.mediadelivery.net' ||
+      host === 'iframe.mediadelivery.net' ||
+      host === 'iframe.b-cdn.net'
+    );
   } catch {
     return false;
   }
