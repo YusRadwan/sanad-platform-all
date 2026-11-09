@@ -138,4 +138,78 @@ final class VideoStatisticsTest extends TestCase
         $this->assertCount(2, $row['sessions']);
     }
 
+
+    public function test_repeated_heartbeats_for_one_session_are_idempotent_and_monotonic(): void
+    {
+        $this->disableRateLimiting();
+        $teacher = $this->makeInstructor();
+        $course = $this->makeCourseFor($teacher);
+        $section = $this->makeSection($course);
+        $item = $this->makeContentItemWithDetail($section, ContentItemType::Video, [
+            'video_url' => 'https://example.com/v.mp4',
+            'duration' => 600,
+        ]);
+        $student = $this->makeStudentUser();
+        $this->makeSubscription($student, $course);
+
+        $this->loginAs($student);
+        $sessionKey = 'cccccccc-dddd-4eee-8fff-aaaaaaaaaaaa';
+        foreach ([120, 60, 180] as $watchedSeconds) {
+            $this->postJson("/api/v1/lessons/{$item->getKey()}/watch-sessions", [
+                'session_key' => $sessionKey,
+                'watched_seconds' => $watchedSeconds,
+            ])->assertOk();
+        }
+
+        $this->assertDatabaseCount('video_watch_sessions', 1);
+        $this->assertDatabaseHas('video_watch_sessions', [
+            'student_id' => $student->getKey(),
+            'content_item_id' => $item->getKey(),
+            'session_key' => $sessionKey,
+            'watched_seconds' => 180,
+        ]);
+    }
+
+    public function test_an_instructor_preview_does_not_create_a_student_watch_session(): void
+    {
+        $this->disableRateLimiting();
+        $teacher = $this->makeInstructor();
+        $course = $this->makeCourseFor($teacher);
+        $section = $this->makeSection($course);
+        $item = $this->makeContentItemWithDetail($section, ContentItemType::Video, [
+            'video_url' => 'https://example.com/v.mp4',
+            'duration' => 600,
+        ]);
+
+        $this->loginAs($teacher);
+        $this->postJson("/api/v1/lessons/{$item->getKey()}/watch-sessions", [
+            'session_key' => 'dddddddd-eeee-4fff-8aaa-bbbbbbbbbbbb',
+            'watched_seconds' => 45,
+        ])->assertOk();
+
+        $this->assertDatabaseCount('video_watch_sessions', 0);
+    }
+
+    public function test_watch_session_payload_is_validated_before_writing(): void
+    {
+        $this->disableRateLimiting();
+        $teacher = $this->makeInstructor();
+        $course = $this->makeCourseFor($teacher);
+        $section = $this->makeSection($course);
+        $item = $this->makeContentItemWithDetail($section, ContentItemType::Video, [
+            'video_url' => 'https://example.com/v.mp4',
+            'duration' => 600,
+        ]);
+        $student = $this->makeStudentUser();
+        $this->makeSubscription($student, $course);
+
+        $this->loginAs($student);
+        $this->postJson("/api/v1/lessons/{$item->getKey()}/watch-sessions", [
+            'session_key' => 'not-a-uuid',
+            'watched_seconds' => -1,
+        ])->assertUnprocessable();
+
+        $this->assertDatabaseCount('video_watch_sessions', 0);
+    }
+
 }
