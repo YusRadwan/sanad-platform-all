@@ -327,6 +327,46 @@ final class AdminSubscriptionsTest extends TestCase
         self::assertSame('حيّ', $subs[0]['courseName']);
     }
 
+    /**
+     * `isCurrentlyActive` is Subscription::scopeActive(), not `status` alone:
+     * an 'active' row past its expiry is FALSE, a NULL expiry (lifetime) and a
+     * future expiry are TRUE, and a cancelled row with a FUTURE expiry is
+     * FALSE (the operator-precedence trap the scope's closure guards against).
+     * `isActive` keeps its old status-only meaning for the existing screens.
+     */
+    public function test_is_currently_active_follows_the_canonical_active_scope(): void
+    {
+        $this->disableRateLimiting();
+        [$instructor] = $this->makeTeacherWithProfile();
+        $lifetime = $this->makeCourseFor($instructor, ['title' => 'دائم']);
+        $future = $this->makeCourseFor($instructor, ['title' => 'مستقبلي']);
+        $expired = $this->makeCourseFor($instructor, ['title' => 'منتهي']);
+        $cancelled = $this->makeCourseFor($instructor, ['title' => 'ملغي']);
+        [$student] = $this->makeStudentWithCode();
+
+        $this->makeSubscription($student, $lifetime);
+        $this->makeSubscription($student, $future, SubscriptionStatus::Active, now()->addDays(10));
+        $this->makeSubscription($student, $expired, SubscriptionStatus::Active, now()->subDay());
+        $this->makeSubscription($student, $cancelled, SubscriptionStatus::Cancelled, now()->addDays(10));
+
+        $this->loginAsAdmin();
+
+        $subs = $this->getJson('/api/v1/admin/subscriptions')
+            ->assertStatus(200)
+            ->json('data.subscriptions.0.subscriptions');
+
+        $byTitle = array_column($subs, null, 'courseName');
+
+        self::assertTrue($byTitle['دائم']['isCurrentlyActive']);
+        self::assertTrue($byTitle['مستقبلي']['isCurrentlyActive']);
+        self::assertFalse($byTitle['منتهي']['isCurrentlyActive']);
+        self::assertFalse($byTitle['ملغي']['isCurrentlyActive']);
+
+        // The legacy flag is untouched: status-only.
+        self::assertTrue($byTitle['منتهي']['isActive']);
+        self::assertFalse($byTitle['ملغي']['isActive']);
+    }
+
     /** No enrolments at all is an empty LIST, not an object or a null. */
     public function test_an_empty_result_is_an_empty_list(): void
     {

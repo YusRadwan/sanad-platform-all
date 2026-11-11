@@ -56,6 +56,7 @@ const EnrollmentCodeDetails = lazy(() => import('./components/Admin/EnrollmentCo
 const FilterEnrollmentCodes = lazy(() => import('./components/Admin/FilterEnrollmentCodes'));
 const StudentCodeDetails = lazy(() => import('./components/Admin/StudentCodeDetails'));
 const ResetStudentPassword = lazy(() => import('./components/Admin/ResetStudentPassword'));
+const CancelSubscription = lazy(() => import('./components/Admin/CancelSubscription'));
 const ManageUsers = lazy(() => import('./components/Admin/ManageUsers'));
 const EditStudent = lazy(() => import('./components/Admin/EditStudent'));
 const AddStudent = lazy(() => import('./components/Admin/AddStudent'));
@@ -492,6 +493,9 @@ export default function App() {
             } />
             <Route path="reset-student-password" element={
               <ResetStudentPassword />
+            } />
+            <Route path="cancel-subscription" element={
+              <CancelSubscription />
             } />
             <Route path="users" element={
               <ManageUsers />
