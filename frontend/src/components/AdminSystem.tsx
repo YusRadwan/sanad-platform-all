@@ -7,7 +7,7 @@ import {
   LayoutDashboard, BarChart3, Megaphone, UserPlus, Users, KeyRound,
   Table2, TableProperties, GraduationCap, Coins, Wallet, FileText,
   Undo2, Banknote, Activity, Settings, ScanSearch, UserSearch, ListFilter,
-  PanelRightClose, PanelRightOpen, Inbox, Building2, UserCog,
+  PanelRightClose, PanelRightOpen, Inbox, Building2, UserCog, UserX,
 } from 'lucide-react';
 
 import Sidebar from './Sidebar';
@@ -96,6 +96,12 @@ const ADMIN_NAV: SidebarNavGroup[] = [
       // because it answers the same question for ONE student that the table
       // answers for all of them, and immediately before إضافة طالب.
       { path: '/admin/student-code-details', label: 'تفاصيل كود الطالب', icon: UserSearch },
+      // NEW — cancel ONE course subscription for ONE student (search by
+      // student code or the student's own phone). Sits right after the
+      // single-student lookup since it acts on the same student picture.
+      // Gated by the SAME admin_subscriptions.manage key as جداول الاشتراكات
+      // (it calls the same two routes) — see employeePermissions.ts.
+      { path: '/admin/cancel-subscription', label: 'إلغاء اشتراك', icon: UserX },
       // NEW — a narrow, single-purpose tool: find a student by phone number
       // alone and reset their password. Sits right after the student lookup
       // screens since it answers a related, but distinct, support request.
@@ -186,7 +192,7 @@ export default function AdminSystem({
     const allowedPaths = new Set(
       ADMIN_EMPLOYEE_PERMISSIONS
         .filter((p) => p.sidebarPath !== null && permissions.includes(p.key))
-        .map((p) => p.sidebarPath)
+        .flatMap((p) => [p.sidebarPath, ...(p.extraSidebarPaths ?? [])])
     );
 
     return ADMIN_NAV

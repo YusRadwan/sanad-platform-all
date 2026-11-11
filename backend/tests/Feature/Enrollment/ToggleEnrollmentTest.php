@@ -76,6 +76,40 @@ final class ToggleEnrollmentTest extends TestCase
         self::assertSame(0, RevenueTransaction::query()->count());
     }
 
+    /**
+     * The admin "إلغاء اشتراك" page cancels ONE course at a time. Cancelling
+     * one pair must leave the same student's other enrolments active and
+     * must not delete any row.
+     */
+    public function test_cancelling_one_course_leaves_the_students_other_subscriptions_active(): void
+    {
+        $this->disableRateLimiting();
+        [$instructor] = $this->makeTeacherWithProfile();
+        $target = $this->makeCourseFor($instructor);
+        $other = $this->makeCourseFor($instructor);
+        [$student] = $this->makeStudentWithCode();
+        $this->makeSubscription($student, $target);
+        $this->makeSubscription($student, $other);
+
+        $this->loginAsAdmin();
+
+        $this->putJson('/api/v1/admin/enrollments/toggle', [
+            'studentId' => (string) $student->getKey(),
+            'courseId' => (string) $target->getKey(),
+            'isActive' => false,
+        ])->assertStatus(200);
+
+        self::assertSame(2, Subscription::query()->count(), 'No row is ever deleted.');
+        self::assertSame(
+            SubscriptionStatus::Cancelled,
+            Subscription::query()->where('course_id', $target->getKey())->sole()->status
+        );
+        self::assertSame(
+            SubscriptionStatus::Active,
+            Subscription::query()->where('course_id', $other->getKey())->sole()->status
+        );
+    }
+
     /** Cancelling something that was never granted is a 404, never a no-op 200. */
     public function test_cancelling_a_nonexistent_enrolment_is_404_with_the_contract_string(): void
     {

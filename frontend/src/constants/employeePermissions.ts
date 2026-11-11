@@ -23,6 +23,15 @@ export interface EmployeePermissionDef {
   key: string;
   label: string;
   sidebarPath: string | null;
+  /**
+   * Additional sidebar pages unlocked by the SAME key (admin side only).
+   * Used when a page calls exactly the routes another page's key already
+   * gates — e.g. «إلغاء اشتراك» uses the same GET /admin/subscriptions and
+   * PUT /admin/enrollments/toggle as «جداول الاشتراكات», both behind
+   * `admin_subscriptions.manage` — so no new permission key is invented and
+   * the backend catalog is unchanged.
+   */
+  extraSidebarPaths?: string[];
 }
 
 /** Teacher-owned employees (decision 10.37) — mirrors INSTRUCTOR_NAV_GROUPS/INSTRUCTOR_NAV_CENTER in InstructorSystem.tsx. */
@@ -62,7 +71,7 @@ export const ADMIN_EMPLOYEE_PERMISSIONS: EmployeePermissionDef[] = [
   { key: 'admin_enrollment_code_details.view', label: 'تفاصيل كود الاشتراك', sidebarPath: '/admin/enrollment-code-details' },
   { key: 'admin_filter_enrollment_codes.view', label: 'فلتر أكواد الاشتراك', sidebarPath: '/admin/filter-enrollment-codes' },
   { key: 'admin_users.view', label: 'جدول المستخدمين', sidebarPath: '/admin/users' },
-  { key: 'admin_subscriptions.manage', label: 'جداول الاشتراكات', sidebarPath: '/admin/manage-subscriptions' },
+  { key: 'admin_subscriptions.manage', label: 'جداول الاشتراكات', sidebarPath: '/admin/manage-subscriptions', extraSidebarPaths: ['/admin/cancel-subscription'] },
   { key: 'admin_student_code_details.view', label: 'تفاصيل كود الطالب', sidebarPath: '/admin/student-code-details' },
   { key: 'admin_reset_student_password.manage', label: 'تعيين كلمة سر الطالب', sidebarPath: '/admin/reset-student-password' },
   { key: 'admin_add_student.manage', label: 'إضافة طالب', sidebarPath: '/admin/add-student' },

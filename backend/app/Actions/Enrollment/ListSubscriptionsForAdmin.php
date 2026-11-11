@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Enrollment;
 
 use App\Models\RevenueTransaction;
+use App\Models\Subscription;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -137,6 +138,13 @@ final class ListSubscriptionsForAdmin
                 'expires_at' => $row->expires_at,
                 'subscribed_at' => $row->subscribed_at,
                 'paymentMethod' => $row->payment_method,
+                // ADDITIVE, and NOT a replacement for `isActive` above (which
+                // stays status-only — two existing screens read it). This one
+                // is computed by Subscription::scopeActive() itself, so it
+                // also honours `expires_at`: a row still marked 'active'
+                // whose expiry has passed is FALSE here. The admin
+                // "إلغاء اشتراك" page lists only rows where this is true.
+                'isCurrentlyActive' => $row->is_currently_active !== null,
             ];
         }
 
@@ -206,6 +214,21 @@ final class ListSubscriptionsForAdmin
                 ->select('payment_method')
                 ->whereColumn('revenue_transactions.subscription_id', 's.id')
                 ->orderByDesc('created_at')
+                ->limit(1),
+            ])
+            /*
+             * `isCurrentlyActive` — a correlated EXISTS-style subquery that
+             * goes THROUGH Subscription::scopeActive() rather than repeating
+             * its predicate inline (see the banner on that scope: re-typing
+             * `status = 'active'` next to an `expires_at` comparison is the
+             * bug it exists to prevent). Yields 1 or NULL, one value per
+             * output row, so — like `payment_method` — it cannot change the
+             * row count.
+             */
+            ->addSelect(['is_currently_active' => Subscription::query()
+                ->active()
+                ->selectRaw('1')
+                ->whereColumn('subscriptions.id', 's.id')
                 ->limit(1),
             ])
             // All rows for one student adjacent, newest enrollment first —
