@@ -10,6 +10,9 @@ import {
   ConfirmDialog,
 } from '../UI';
 import { useCenteredNotification } from '../../context/CenteredNotificationContext';
+import {
+  normalizePhone, normalizeStudentCode as normalizeCode, phoneSearchFragment, toAsciiDigits,
+} from '../../utils/studentLookup';
 
 /**
  * صفحة «إلغاء اشتراك» (admin only).
@@ -74,29 +77,11 @@ interface PendingCancel {
   courseName: string;
 }
 
-// Same accepted forms as «تفاصيل كود الطالب»: 6 digits, or STU + 6 digits.
-const CODE_PATTERN = /^(STU)?\d{6}$/i;
-
 const SUB_STATUS_LABEL: Record<string, string> = {
   active: 'نشط',
   expired: 'منتهي',
   cancelled: 'ملغي',
 };
-
-/** Egyptian mobile → canonical 11-digit "01xxxxxxxxx", or null if not one. */
-function normalizePhone(raw: string | null | undefined): string | null {
-  let digits = String(raw ?? '').replace(/\D/g, '');
-  if (digits.startsWith('0020')) digits = digits.slice(4);
-  else if (digits.startsWith('20') && digits.length === 12) digits = digits.slice(2);
-  if (digits.length === 10 && digits.startsWith('1')) digits = '0' + digits;
-  return /^01\d{9}$/.test(digits) ? digits : null;
-}
-
-function normalizeCode(raw: string): string | null {
-  const v = raw.trim().toUpperCase();
-  if (!CODE_PATTERN.test(v)) return null;
-  return v.startsWith('STU') ? v : 'STU' + v;
-}
 
 function formatDate(value: string | null): string {
   if (!value) return '—';
@@ -138,12 +123,13 @@ export default function CancelSubscription() {
     try {
       // The server filter is a contains-match, so send the most permissive
       // fragment that still identifies the value (6 code digits / the last 10
-      // phone digits, which matches both 01… and +201… storage) and then
-      // keep only the exact match below.
+      // phone digits, which matches 01…, +201… and 00201… storage alike — see
+      // utils/studentLookup.ts) and then keep only the exact match below.
+      // `phone` is students.phone; `parent_phone` is never sent.
       const rows: ApiStudentRow[] = await adminService.getSubscriptions(
         code
           ? { student_code: code.slice(3) }
-          : { phone: phone!.slice(1) }
+          : { phone: phoneSearchFragment(phone!) }
       );
 
       const exact = (Array.isArray(rows) ? rows : []).filter((r) =>
@@ -258,7 +244,7 @@ export default function CancelSubscription() {
                       maxLength={9}
                       value={query}
                       disabled={searching}
-                      onChange={(e) => setQuery(e.target.value.replace(/[^0-9a-zA-Z]/g, '').slice(0, 9).toUpperCase())}
+                      onChange={(e) => setQuery(toAsciiDigits(e.target.value).replace(/[^0-9a-zA-Z]/g, '').slice(0, 9).toUpperCase())}
                       placeholder="مثال: 510078 أو STU510078"
                       className="text-lg md:text-xl font-black font-mono tracking-[0.25em] placeholder:text-base placeholder:tracking-normal placeholder:font-bold"
                     />
@@ -282,7 +268,7 @@ export default function CancelSubscription() {
                       maxLength={16}
                       value={query}
                       disabled={searching}
-                      onChange={(e) => setQuery(e.target.value.replace(/[^0-9+]/g, '').slice(0, 16))}
+                      onChange={(e) => setQuery(toAsciiDigits(e.target.value).replace(/[^0-9+]/g, '').slice(0, 16))}
                       placeholder="01xxxxxxxxx"
                       className="text-lg md:text-xl font-black font-mono tracking-[0.15em] text-right placeholder:text-base placeholder:tracking-normal placeholder:font-bold"
                     />
