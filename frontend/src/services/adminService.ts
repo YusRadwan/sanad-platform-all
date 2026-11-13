@@ -338,6 +338,16 @@ export const adminService = {
     }
   },
 
+  async createManualActivation(data: { studentId: string; courseId: string; accessType: 'lifetime' | 'limited'; expiresAt?: string }) {
+    try {
+      const response = await api.post('/admin/manual-activations', data);
+      return response.data.data.enrollment;
+    } catch (error) {
+      logger.error('adminService.createManualActivation failed', error as Error);
+      throw error;
+    }
+  },
+
   async toggleEnrollmentStatus(studentId: string, courseId: string, isActive: boolean) {
     try {
       const response = await api.put('/admin/enrollments/toggle', { studentId, courseId, isActive });

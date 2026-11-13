@@ -7,7 +7,7 @@ import {
   LayoutDashboard, BarChart3, Megaphone, UserPlus, Users, KeyRound,
   Table2, TableProperties, GraduationCap, Coins, Wallet, FileText,
   Undo2, Banknote, Activity, Settings, ScanSearch, UserSearch, ListFilter,
-  PanelRightClose, PanelRightOpen, Inbox, Building2, UserCog, UserX,
+  PanelRightClose, PanelRightOpen, Inbox, Building2, UserCog, UserX, CalendarDays,
 } from 'lucide-react';
 
 import Sidebar from './Sidebar';
@@ -92,6 +92,7 @@ const ADMIN_NAV: SidebarNavGroup[] = [
       // 7 & 8 — the two flat-table screens share a table icon family
       { path: '/admin/users', label: 'جدول المستخدمين', icon: Table2 },
       { path: '/admin/manage-subscriptions', label: 'جداول الاشتراكات', icon: TableProperties },
+      { path: '/admin/manual-activation', label: 'التفعيل اليدوي', icon: CalendarDays },
       // NEW — single-student lookup. Sits right after the subscriptions table
       // because it answers the same question for ONE student that the table
       // answers for all of them, and immediately before إضافة طالب.
