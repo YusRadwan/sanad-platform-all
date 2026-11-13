@@ -51,6 +51,7 @@ const ManageTeachers = lazy(() => import('./components/Admin/ManageTeachers'));
 const ManageEmployees = lazy(() => import('./components/Admin/ManageEmployees'));
 const BroadcastNotifications = lazy(() => import('./components/Admin/BroadcastNotifications'));
 const ManageSubscriptions = lazy(() => import('./components/Admin/ManageSubscriptions'));
+const ManualActivation = lazy(() => import('./components/Admin/ManualActivation'));
 const EnrollmentCodes = lazy(() => import('./components/Admin/EnrollmentCodes'));
 const EnrollmentCodeDetails = lazy(() => import('./components/Admin/EnrollmentCodeDetails'));
 const FilterEnrollmentCodes = lazy(() => import('./components/Admin/FilterEnrollmentCodes'));
@@ -475,6 +476,7 @@ export default function App() {
             <Route path="manage-subscriptions" element={
               <ManageSubscriptions />
             } />
+            <Route path="manual-activation" element={<ManualActivation />} />
             <Route path="enrollment-codes" element={
               <EnrollmentCodes />
             } />

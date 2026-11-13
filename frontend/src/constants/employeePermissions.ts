@@ -72,6 +72,7 @@ export const ADMIN_EMPLOYEE_PERMISSIONS: EmployeePermissionDef[] = [
   { key: 'admin_filter_enrollment_codes.view', label: 'فلتر أكواد الاشتراك', sidebarPath: '/admin/filter-enrollment-codes' },
   { key: 'admin_users.view', label: 'جدول المستخدمين', sidebarPath: '/admin/users' },
   { key: 'admin_subscriptions.manage', label: 'جداول الاشتراكات', sidebarPath: '/admin/manage-subscriptions', extraSidebarPaths: ['/admin/cancel-subscription'] },
+  { key: 'admin_manual_activation.manage', label: 'التفعيل اليدوي', sidebarPath: '/admin/manual-activation' },
   { key: 'admin_student_code_details.view', label: 'تفاصيل كود الطالب', sidebarPath: '/admin/student-code-details' },
   { key: 'admin_reset_student_password.manage', label: 'تعيين كلمة سر الطالب', sidebarPath: '/admin/reset-student-password' },
   { key: 'admin_add_student.manage', label: 'إضافة طالب', sidebarPath: '/admin/add-student' },
