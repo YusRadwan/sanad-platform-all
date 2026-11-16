@@ -58,7 +58,7 @@ jobs:
           git -C "$REPO_DIR" rev-parse --is-inside-work-tree >/dev/null
           ORIGIN="$(git -C "$REPO_DIR" remote get-url origin)"
           case "$ORIGIN" in
-            https://github.com/YusRadwan/sanad-platform-all.git|git@github.com:YusRadwan/sanad-platform-all.git) ;;
+            https://github.com/YusRadwan/sanad-platform-all.git|https://github.com/YusRadwan/sanad-platform-all|git@github.com:YusRadwan/sanad-platform-all.git|git@github.com:YusRadwan/sanad-platform-all) ;;
             *) echo "Unexpected Git origin; refusing deployment."; exit 1 ;;
           esac
 
