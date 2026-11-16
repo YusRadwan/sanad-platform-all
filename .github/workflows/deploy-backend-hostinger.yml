@@ -1,0 +1,92 @@
+name: Deploy Sanad Backend to Hostinger
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sanad-backend-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY_B64: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY_B64 }}
+          SSH_KNOWN_HOSTS: ${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s' "$SSH_PRIVATE_KEY_B64" | base64 --decode > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null
+
+      - name: Update backend on Hostinger
+        env:
+          SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "bash -s -- '$EXPECTED_SHA'" <<'REMOTE'
+          set -Eeuo pipefail
+          EXPECTED_SHA="$1"
+          REPO_DIR="$HOME/sanad-platform-all"
+          BACKEND_DIR="$REPO_DIR/backend"
+          PREVIOUS_SHA=""
+
+          rollback_on_error() {
+            status=$?
+            if [ "$status" -ne 0 ] && [ -n "$PREVIOUS_SHA" ]; then
+              echo "Deploy verification failed; restoring previous backend revision."
+              git -C "$REPO_DIR" reset --hard "$PREVIOUS_SHA" || true
+              (cd "$BACKEND_DIR" && php artisan optimize:clear) || true
+            fi
+            exit "$status"
+          }
+          trap rollback_on_error EXIT
+
+          test -f "$BACKEND_DIR/artisan"
+          test -f "$BACKEND_DIR/.env"
+          git -C "$REPO_DIR" rev-parse --is-inside-work-tree >/dev/null
+          ORIGIN="$(git -C "$REPO_DIR" remote get-url origin)"
+          case "$ORIGIN" in
+            https://github.com/YusRadwan/sanad-platform-all.git|git@github.com:YusRadwan/sanad-platform-all.git) ;;
+            *) echo "Unexpected Git origin; refusing deployment."; exit 1 ;;
+          esac
+
+          CURRENT_BRANCH="$(git -C "$REPO_DIR" branch --show-current)"
+          if [ "$CURRENT_BRANCH" != "main" ]; then
+            echo "Expected the Hostinger checkout to be on main; found another branch."
+            exit 1
+          fi
+          if [ -n "$(git -C "$REPO_DIR" status --porcelain)" ]; then
+            echo "Hostinger checkout has local changes; refusing deployment."
+            exit 1
+          fi
+
+          git -C "$REPO_DIR" fetch --no-tags origin main
+          TARGET_SHA="$(git -C "$REPO_DIR" rev-parse FETCH_HEAD)"
+          if [ "$TARGET_SHA" != "$EXPECTED_SHA" ]; then
+            echo "The workflow commit no longer matches origin/main; rerun from the latest main."
+            exit 1
+          fi
+          PREVIOUS_SHA="$(git -C "$REPO_DIR" rev-parse HEAD)"
+          git -C "$REPO_DIR" merge-base --is-ancestor "$PREVIOUS_SHA" "$TARGET_SHA"
+          git -C "$REPO_DIR" merge --ff-only "$TARGET_SHA"
+
+          cd "$BACKEND_DIR"
+          php artisan optimize:clear
+          php artisan route:list --path=manual-activations --method=POST \
+            | grep -Fq "api/v1/admin/manual-activations"
+
+          echo "BACKEND_DEPLOY_VERIFIED"
+          PREVIOUS_SHA=""
+          REMOTE
