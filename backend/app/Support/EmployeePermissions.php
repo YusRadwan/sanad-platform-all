@@ -98,6 +98,8 @@ final class EmployeePermissions
 
     public const ADMIN_SUBSCRIPTIONS_MANAGE = 'admin_subscriptions.manage';
 
+    public const ADMIN_MANUAL_ACTIVATION_MANAGE = 'admin_manual_activation.manage';
+
     public const ADMIN_STUDENT_CODE_DETAILS_VIEW = 'admin_student_code_details.view';
 
     public const ADMIN_RESET_STUDENT_PASSWORD_MANAGE = 'admin_reset_student_password.manage';
@@ -163,6 +165,7 @@ final class EmployeePermissions
         self::ADMIN_FILTER_ENROLLMENT_CODES_VIEW => 'فلتر أكواد الاشتراك',
         self::ADMIN_USERS_VIEW => 'جدول المستخدمين',
         self::ADMIN_SUBSCRIPTIONS_MANAGE => 'جداول الاشتراكات',
+        self::ADMIN_MANUAL_ACTIVATION_MANAGE => 'التفعيل اليدوي',
         self::ADMIN_STUDENT_CODE_DETAILS_VIEW => 'تفاصيل كود الطالب',
         self::ADMIN_RESET_STUDENT_PASSWORD_MANAGE => 'تعيين كلمة سر الطالب',
         self::ADMIN_ADD_STUDENT_MANAGE => 'إضافة طالب',
