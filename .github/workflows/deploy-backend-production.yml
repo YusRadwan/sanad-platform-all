@@ -155,11 +155,15 @@ jobs:
             --no-interaction \
             --prefer-dist \
             --optimize-autoloader \
-            --no-progress
+            --no-progress \
+            --no-scripts
 
           echo "=== CLEAR LARAVEL CACHES ==="
           cd "$BACKEND"
           php artisan optimize:clear --no-interaction
+
+          echo "=== REFRESH LARAVEL PACKAGE MANIFEST ==="
+          php artisan package:discover --ansi
 
           echo "=== BACKEND POST-DEPLOY CHECKS ==="
           php artisan --version
