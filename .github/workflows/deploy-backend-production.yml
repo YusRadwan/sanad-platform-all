@@ -166,7 +166,11 @@ jobs:
           test -f app/Models/VideoWatchSession.php
           test -f app/Actions/Lesson/RecordVideoWatchSession.php
           test -f database/migrations/2026_11_08_000001_create_video_watch_sessions_table.php
+          test -f app/Actions/Enrollment/GrantManualActivation.php
           test -f vendor/autoload.php
+          php artisan route:list --path=manual-activations --method=POST \
+            | grep -Fq "api/v1/admin/manual-activations"
+          echo "MANUAL_ACTIVATION_ROUTE_VERIFIED"
           echo "BACKEND_DEPLOY_SUCCESS"
           echo "DATABASE_MIGRATIONS_NOT_RUN"
           trap - EXIT
