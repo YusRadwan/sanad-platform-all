@@ -44,7 +44,7 @@ export default function CourseSections({
           {isPlayingVideo && hasAccess && (
             <div className="bg-slate-950 rounded-[28px] overflow-hidden border-2 border-blue-500/60 p-6 flex flex-col items-center justify-center text-center relative aspect-[16/9] w-full select-none shadow-lg">
               <div className="text-white space-y-3 z-10 max-w-md">
-                <PlayCircle className="w-16 h-16 text-blue-500 mx-auto animate-pulse" />
+                <PlayCircle className="w-16 h-16 text-blue-500 mx-auto" />
                 <h4 className="font-extrabold text-base md:text-lg">جاري تشغيل مشغل الفيديو الحصري المؤمن لـ سَنَدْ</h4>
                 <p className="text-xs text-slate-400 leading-relaxed">المشاهدة مؤمنة بالكامل لحماية الخصوصية ومستوى الاتصال التعليمي ومنع النسخ.</p>
               </div>
@@ -88,14 +88,12 @@ export default function CourseSections({
                         : 'hover:bg-slate-50/40 dark:hover:bg-slate-800/10'
                     }`}
                   >
-                    {/* Exquisite colored right accent border for visual hierarchy */}
-                    <div className="absolute right-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-blue-600 via-blue-500 to-indigo-600 rounded-l-md" />
 
                     <div className="flex items-center gap-5 pr-2">
                       {/* Premium Circle Index Badge */}
                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 font-black text-sm transition-all duration-300 border ${
                         isGroupExpanded
-                          ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-transparent shadow-lg shadow-blue-500/20'
+                          ? 'bg-blue-600 text-white border-transparent'
                           : 'bg-blue-50/50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 border-blue-100/40 dark:border-blue-900/30'
                       }`}>
                         {groupNumber}
@@ -105,19 +103,19 @@ export default function CourseSections({
                         <h3 className="text-base md:text-lg font-black text-slate-900 dark:text-white leading-tight flex flex-wrap items-center gap-2">
                           <span>{group.title}</span>
                           {group.isHidden && (
-                            <span className="text-[10px] px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 font-extrabold shadow-sm">مخفي عن الطلاب</span>
+                            <span className="text-xs px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 font-extrabold shadow-sm">مخفي عن الطلاب</span>
                           )}
                         </h3>
                         <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 block">
-                          يحتوي على {group.items.filter((i: any) => !i.isHidden || userRole === 'admin' || userRole === 'instructor').length} محتويات تعليمية منظمة
+                          {group.items.filter((i: any) => !i.isHidden || userRole === 'admin' || userRole === 'instructor').length} محتوى
                         </span>
                       </div>
                     </div>
 
                     <span className={`p-2.5 rounded-2xl border flex items-center justify-center shrink-0 transition-all duration-500 ${
                       isGroupExpanded 
-                        ? 'rotate-180 text-white bg-gradient-to-r from-blue-600 to-indigo-600 border-transparent shadow-md shadow-blue-500/25 scale-110' 
-                        : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 hover:scale-105'
+                        ? 'rotate-180 text-blue-600 bg-blue-50 border-blue-100 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-900/40' 
+                        : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600'
                     }`}>
                       <svg className="w-4.5 h-4.5 fill-none stroke-current stroke-[3px]" viewBox="0 0 24 24">
                         <polyline points="6 9 12 15 18 9" />
@@ -222,7 +220,7 @@ export default function CourseSections({
                               >
                                 {/* Timeline Connected Node Dot */}
                                 <div className={`absolute right-[-14px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-4 border-slate-100 dark:border-slate-950 hidden lg:block z-10 ${
-                                  itemHasAccess ? 'bg-blue-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-800'
+                                  itemHasAccess ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-800'
                                 }`} />
 
                                 <div className="flex items-start sm:items-center gap-5 w-full lg:w-auto">

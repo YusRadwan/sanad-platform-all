@@ -343,3 +343,105 @@ p, li { text-wrap: pretty; }
 .enter-2 { animation-delay: 80ms; }
 .enter-3 { animation-delay: 160ms; }
 .enter-4 { animation-delay: 240ms; }
+
+/* ===========================================================================
+ * SANAD THEME LAYER — rolls the "كراسة سند" system onto existing pages.
+ * ---------------------------------------------------------------------------
+ * Tailwind v4 utilities read their values from CSS variables
+ * (`bg-slate-50` -> var(--color-slate-50), `font-black` ->
+ * var(--font-weight-black), `rounded-3xl` -> var(--radius-3xl)…). Redefining
+ * those variables inside `.sanad-theme` re-skins every page under it at once,
+ * with no per-class rewrite:
+ *   - slate  -> the paper/ink ramp (one monotone ramp, so the same step
+ *               works as a light-mode text colour and a dark-mode surface);
+ *   - blue / indigo / violet / purple / fuchsia -> the Sanad blue ramp
+ *               (no violet anywhere, one accent);
+ *   - weights capped at 600, letter-spacing 0 (Arabic), calmer radii and
+ *     neutral shadows.
+ * Page-level cleanup (blurred blobs, gradients, stock art) is still done in
+ * each page; this layer only guarantees they all speak the same system.
+ * Rolled out group by group: applied to <main> for the public pages first.
+ * ------------------------------------------------------------------------ */
+.sanad-theme {
+  font-family: var(--font-readex);
+  --font-sans: var(--font-readex);
+
+  --color-slate-50: #F7F5F0;
+  --color-slate-100: #EFECE4;
+  --color-slate-200: #E1DED6;
+  --color-slate-300: #C9C7C2;
+  --color-slate-400: #6E7285;
+  --color-slate-500: #5A5F73;
+  --color-slate-600: #4A4F63;
+  --color-slate-700: #363B52;
+  --color-slate-800: #262B45;
+  --color-slate-900: #1D2340;
+  --color-slate-950: #12142A;
+  --color-gray-50: #F7F5F0;
+  --color-gray-100: #EFECE4;
+  --color-gray-200: #E1DED6;
+  --color-gray-300: #C9C7C2;
+  --color-gray-400: #6E7285;
+  --color-gray-500: #5A5F73;
+  --color-gray-600: #4A4F63;
+  --color-gray-700: #363B52;
+  --color-gray-800: #262B45;
+  --color-gray-900: #1D2340;
+
+  --color-blue-50: #EEF0FD;
+  --color-blue-100: #DDE1FB;
+  --color-blue-200: #BCC3F6;
+  --color-blue-300: #A3ABF7;
+  --color-blue-400: #8F98FF;
+  --color-blue-500: #4F5CE8;
+  --color-blue-600: #3544E1;
+  --color-blue-700: #2A37C4;
+  --color-blue-800: #232D9E;
+  --color-blue-900: #1E2780;
+  --color-blue-950: #151B57;
+  --color-indigo-50: #EEF0FD;
+  --color-indigo-100: #DDE1FB;
+  --color-indigo-200: #BCC3F6;
+  --color-indigo-300: #A3ABF7;
+  --color-indigo-400: #8F98FF;
+  --color-indigo-500: #4F5CE8;
+  --color-indigo-600: #3544E1;
+  --color-indigo-700: #2A37C4;
+  --color-indigo-800: #232D9E;
+  --color-indigo-900: #1E2780;
+  --color-indigo-950: #151B57;
+  --color-violet-500: #4F5CE8;
+  --color-violet-600: #3544E1;
+  --color-purple-500: #4F5CE8;
+  --color-purple-600: #3544E1;
+  --color-fuchsia-500: #4F5CE8;
+  --color-fuchsia-600: #3544E1;
+
+  --font-weight-black: 600;
+  --font-weight-extrabold: 600;
+  --font-weight-bold: 600;
+
+  --tracking-tighter: 0;
+  --tracking-tight: 0;
+  --tracking-wide: 0;
+  --tracking-wider: 0;
+  --tracking-widest: 0;
+
+  --radius-3xl: 1.25rem;
+  --radius-2xl: 1rem;
+
+  --shadow-2xl: 0 1px 2px rgb(29 35 64 / 0.06), 0 16px 32px -20px rgb(29 35 64 / 0.3);
+  --shadow-xl: 0 1px 2px rgb(29 35 64 / 0.06), 0 12px 24px -16px rgb(29 35 64 / 0.28);
+  --shadow-lg: 0 1px 2px rgb(29 35 64 / 0.05), 0 8px 18px -12px rgb(29 35 64 / 0.25);
+
+  background-color: var(--paper);
+  color: var(--ink);
+}
+.sanad-theme :focus-visible {
+  outline: 3px solid var(--sanad-ink);
+  outline-offset: 2px;
+}
+.dark .sanad-theme :focus-visible { outline-color: var(--sanad-ink-on-dark); }
+/* Solid Sanad-blue fills that used to be inline `style={{ backgroundColor }}`. */
+[data-sanad-fill] { background-color: var(--sanad-ink); transition: background-color 160ms var(--ease-out); }
+button[data-sanad-fill]:hover:not(:disabled) { background-color: var(--sanad-ink-hover); }

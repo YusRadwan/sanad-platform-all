@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router';
 import TeacherProfilePage from '../TeacherProfilePage';
+import LoadingScreen from '../UI/LoadingScreen';
 import { Teacher, Course } from '../../types/index';
 
 interface TeacherProfileWrapperProps {
@@ -29,15 +30,19 @@ export default function TeacherProfileWrapper({
 
   const matchedTeacher = teachersList.find((t: any) => t.id === id && t.isActive !== false);
 
+  // The list arrives asynchronously (App fetches it on /teacher/* too), so an
+  // empty list means "still loading", not "no such teacher".
+  if (!matchedTeacher && teachersList.length === 0) {
+    return <LoadingScreen fullScreen={false} />;
+  }
+
   if (!matchedTeacher) {
     return (
-      <div className="py-32 text-center text-slate-900 dark:text-white">
-        <h2 className="text-2xl font-black mb-4">عذراً، لم نتمكن من العثور على هذا المعلم!</h2>
-        <button 
-          onClick={() => navigate('/')} 
-          className="px-6 py-3 bg-blue-600 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/20 cursor-pointer"
-        >
-          العودة للصفحة الرئيسية
+      <div className="mx-auto max-w-[560px] px-5 py-24 text-center">
+        <h1 className="m-0 mb-3 text-2xl font-semibold">مش لاقيين المدرس ده</h1>
+        <p className="m-0 mb-8 text-base text-slate-500">ممكن يكون الرابط قديم أو المدرس مبقاش على المنصة</p>
+        <button type="button" onClick={() => navigate('/teachers')} className="btn-primary h-11 px-6 text-[15px]">
+          شوف كل المدرسين
         </button>
       </div>
     );

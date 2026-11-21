@@ -75,7 +75,7 @@ export default function TeacherApplicationPage({ onBackToHome }: TeacherApplicat
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
-              className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-2xl text-center"
+              className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 border-[var(--hair-strong)] text-center"
             >
               <div className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/35 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 className="w-12 h-12" />

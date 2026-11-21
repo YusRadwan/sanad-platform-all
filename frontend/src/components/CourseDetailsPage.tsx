@@ -236,10 +236,10 @@ export default function CourseDetailsPage({ course, onBack }: CourseDetailsPageP
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -15 }}
       transition={{ duration: 0.4 }}
-      className="min-h-screen bg-slate-50 dark:bg-slate-950 px-4 py-8 md:py-12 text-slate-900 dark:text-white"
+      className="min-h-screen px-5 py-10 sm:px-8 md:py-14"
       dir="rtl"
     >
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="mx-auto max-w-[1200px] space-y-10">
 
         <CourseHeader
           course={course}

@@ -83,7 +83,7 @@ export default function SignupPage({ onBackToHome, onNavigateToLogin }: SignupPa
     `py-2.5 px-4 rounded-2xl border font-black text-sm flex items-center justify-center gap-2 cursor-pointer ${selected ? 'bg-[#3544e1]/10 border-[#3544e1] text-[#3544e1]' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900'}`;
 
   return (
-    <div dir="rtl" className="min-h-[85vh] lg:min-h-[calc(100vh-98px)] flex flex-col lg:flex-row bg-slate-50 dark:bg-slate-900/10 font-sans transition-colors duration-300 select-none">
+    <div dir="rtl" className="min-h-[calc(100vh-72px)] flex bg-[var(--paper)]">
       {/* Pre-signup instructions gate — a blocking modal shown once when this
           page mounts, before the student can interact with the form behind
           it. Dismissing it only hides the overlay; it does not reset or skip
@@ -102,11 +102,11 @@ export default function SignupPage({ onBackToHome, onNavigateToLogin }: SignupPa
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.3 }}
-              className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-2xl"
+              className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 border-[var(--hair-strong)]"
             >
               <div className="p-6 sm:p-8 text-right">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center" style={{ backgroundColor: '#3544e1' }}>
+                  <span className="shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center" data-sanad-fill>
                     <BookOpenCheck className="w-5.5 h-5.5 text-white" />
                   </span>
                   <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
@@ -121,8 +121,7 @@ export default function SignupPage({ onBackToHome, onNavigateToLogin }: SignupPa
                   {SIGNUP_INSTRUCTIONS.map((text, idx) => (
                     <li key={idx} className="flex items-start gap-3">
                       <span
-                        className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white mt-0.5"
-                        style={{ backgroundColor: '#3544e1' }}
+                        className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white mt-0.5" data-sanad-fill
                       >
                         {idx + 1}
                       </span>
@@ -136,8 +135,7 @@ export default function SignupPage({ onBackToHome, onNavigateToLogin }: SignupPa
                 <button
                   type="button"
                   onClick={() => setShowInstructions(false)}
-                  className="w-full py-3.5 rounded-2xl text-white font-black text-sm sm:text-base cursor-pointer"
-                  style={{ backgroundColor: '#3544e1' }}
+                  className="w-full py-3.5 rounded-2xl text-white font-black text-sm sm:text-base cursor-pointer" data-sanad-fill
                 >
                   قرأت التعليمات، أكمل التسجيل
                 </button>
@@ -151,11 +149,7 @@ export default function SignupPage({ onBackToHome, onNavigateToLogin }: SignupPa
           physically on the right under `dir="rtl"`, no order utilities
           needed. Scrolls independently so a tall step never fights the
           fixed-height brand panel beside it. */}
-      <div className="relative w-full lg:w-1/2 overflow-y-auto py-4 px-4 sm:px-6 lg:px-10 flex flex-col items-center justify-center">
-        {/* Atmosphere Glows */}
-        <div className="absolute top-0 right-1/4 w-[350px] h-[350px] bg-blue-600/10 dark:bg-blue-600/15 rounded-full blur-[100px] -z-10 pointer-events-none" />
-        <div className="absolute bottom-12 left-1/4 w-[400px] h-[400px] bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-[110px] -z-10 pointer-events-none" />
-
+      <div className="relative w-full py-10 px-5 sm:px-8 flex flex-col items-center justify-center">
       <div className="max-w-2xl mx-auto w-full">
         <AnimatePresence mode="wait">
 
@@ -167,7 +161,7 @@ export default function SignupPage({ onBackToHome, onNavigateToLogin }: SignupPa
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
-              className="max-w-2xl mx-auto p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-2xl text-center relative overflow-hidden"
+              className="max-w-2xl mx-auto p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 border-[var(--hair-strong)] text-center relative overflow-hidden"
               id="signup_success_card"
             >
               <div className="absolute inset-0 bg-radial-gradient from-blue-500/5 to-transparent pointer-events-none" />
@@ -230,8 +224,7 @@ export default function SignupPage({ onBackToHome, onNavigateToLogin }: SignupPa
                     setIsSubmitted(false);
                     onBackToHome?.();
                   }}
-                  className="w-full sm:w-auto px-8 py-3.5 text-white rounded-2xl font-extrabold text-base cursor-pointer"
-                  style={{ backgroundColor: '#3544e1' }}
+                  className="w-full sm:w-auto px-8 py-3.5 text-white rounded-2xl font-extrabold text-base cursor-pointer" data-sanad-fill
                 >
                   الذهاب إلى لوحة التحكم التعليمية
                 </button>
@@ -278,7 +271,7 @@ export default function SignupPage({ onBackToHome, onNavigateToLogin }: SignupPa
                                 isDone
                                   ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20'
                                   : isCurrent
-                                    ? 'bg-gradient-to-l from-blue-600 to-blue-500 border-blue-600 text-white shadow-lg shadow-blue-500/25 scale-110'
+                                    ? 'bg-blue-600 border-blue-600 text-white scale-110'
                                     : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600'
                               }`}
                               aria-current={isCurrent ? 'step' : undefined}
@@ -371,7 +364,7 @@ export default function SignupPage({ onBackToHome, onNavigateToLogin }: SignupPa
                               className={`py-2.5 px-6 rounded-2xl border font-black text-sm flex items-center justify-center gap-2 cursor-pointer ${gender === 'ذكر' ? 'bg-[#3544e1]/10 border-[#3544e1] text-[#3544e1]' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900'}`}
                             >
                               <span>ذكر</span>
-                              {gender === 'ذكر' && <div className="w-4 h-4 rounded-full text-white flex items-center justify-center text-[10px] font-bold" style={{ backgroundColor: '#3544e1' }}>✓</div>}
+                              {gender === 'ذكر' && <div className="w-4 h-4 rounded-full text-white flex items-center justify-center text-[10px] font-bold" data-sanad-fill>✓</div>}
                             </button>
                             <button
                               type="button"
@@ -668,8 +661,7 @@ export default function SignupPage({ onBackToHome, onNavigateToLogin }: SignupPa
                         type="button"
                         onClick={goToNextStep}
                         disabled={!isStepValid(step)}
-                        className={`flex-1 w-full flex items-center justify-center gap-2.5 text-white py-3 px-6 rounded-2xl font-black text-base cursor-pointer ${!isStepValid(step) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        style={{ backgroundColor: '#3544e1' }}
+                        className={`flex-1 w-full flex items-center justify-center gap-2.5 text-white py-3 px-6 rounded-2xl font-black text-base cursor-pointer ${!isStepValid(step) ? 'opacity-50 cursor-not-allowed' : ''}`} data-sanad-fill
                       >
                         <span>التالي</span>
                         <ArrowLeft className="w-5 h-5 text-white" />
@@ -678,8 +670,7 @@ export default function SignupPage({ onBackToHome, onNavigateToLogin }: SignupPa
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className={`flex-1 w-full flex items-center justify-center gap-2.5 text-white py-3 px-6 rounded-2xl font-black text-base cursor-pointer ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
-                        style={{ backgroundColor: '#3544e1' }}
+                        className={`flex-1 w-full flex items-center justify-center gap-2.5 text-white py-3 px-6 rounded-2xl font-black text-base cursor-pointer ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`} data-sanad-fill
                       >
                         {isSubmitting ? (
                           <>
@@ -718,22 +709,6 @@ export default function SignupPage({ onBackToHome, onNavigateToLogin }: SignupPa
       </div>
       </div>
 
-      {/* LEFT half — solid brand-blue panel with the signup illustration.
-          Default DOM order (second child) renders it physically on the left
-          under `dir="rtl"`. Hidden below `lg` — a 50/50 split has no room to
-          spare on a phone or small tablet, so the form panel above simply
-          takes the full width there instead. */}
-      <div
-        className="hidden lg:flex lg:w-1/2 items-center justify-center p-8 shrink-0"
-        style={{ backgroundColor: '#3544e1' }}
-      >
-        <img
-          src="/branding/signup.svg"
-          alt=""
-          aria-hidden="true"
-          className="w-full max-w-md h-auto object-contain"
-        />
-      </div>
     </div>
   );
 }

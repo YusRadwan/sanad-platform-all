@@ -1,4 +1,4 @@
-import { Sparkles, Lock, CheckCircle2, Wallet } from 'lucide-react';
+import { Lock, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import EnrollmentCodeModal, { useEnrollmentCodeRedemption } from '../EnrollmentCodeModal';
 
@@ -35,56 +35,41 @@ export default function CourseEnrollmentAction({
   return (
     <>
 
-        {/* Course Enrollment Quick Action Panel */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 md:p-6 border border-slate-200/55 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5 max-w-6xl mx-auto">
-          <div className="flex items-center gap-3.5 w-full md:w-auto">
-            <div className={`shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center ${
-              course.isFree
-                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
-            }`}>
-              {course.isFree ? <Sparkles className="w-5 h-5" /> : <Wallet className="w-5 h-5" />}
-            </div>
-            <div className="text-right min-w-0">
-              <span className="text-[11px] text-slate-400 dark:text-slate-500 font-extrabold block leading-tight">الوصول للكورس التعليمي</span>
-              <span className={`text-base md:text-lg font-black leading-tight ${course.isFree ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-white'}`}>
-                {course.isFree ? 'مجاني بالكامل' : 'يتطلب كود اشتراك'}
+        {/* Access panel: what unlocks this course, and the one action. */}
+        <div className="flex flex-col gap-4 rounded-2xl border border-[var(--hair-strong)] bg-[var(--paper-card)] p-5 md:flex-row md:items-center md:justify-between md:p-6">
+          <div className="flex flex-col gap-1">
+            <span className="text-[17px] font-medium">
+              {course.isFree ? 'الكورس ده مجاني' : 'الكورس بيتفتح بكود اشتراك'}
+            </span>
+            {!course.isFree && !hasAccess && (
+              <span className="text-sm text-slate-500 dark:text-slate-400">
+                ادفع وهيوصلك كود الاشتراك، أو الأدمن يفعّل لك الكورس على حسابك
               </span>
-            </div>
+            )}
           </div>
 
-          <div className="hidden md:block w-px self-stretch bg-slate-100 dark:bg-slate-800" />
-
-          <div className="flex flex-wrap gap-3 w-full md:w-auto md:flex-1 md:max-w-xs">
+          <div className="md:min-w-[280px]">
             {hasAccess ? (
-              <span className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 font-bold text-sm w-full justify-center select-none shadow-sm">
-                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                <span>أنت مشترك في هذا الكورس ومصرح لك بالوصول</span>
+              <span className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-emerald-50 px-6 text-[15px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
+                إنت مشترك في الكورس ده
               </span>
             ) : loggedIn ? (
               userRole !== 'instructor' ? (
-                <button
-                  onClick={openModal}
-                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg shadow-emerald-500/25 border border-emerald-600 font-bold text-sm md:text-base w-full justify-center select-none transition-all cursor-pointer"
-                >
-                  <span>اشترك الآن</span>
+                <button type="button" onClick={openModal} className="btn-primary h-12 w-full px-6 text-base">
+                  اشترك بالكود
                 </button>
               ) : (
-                <span className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-50 dark:bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-500/20 font-bold text-sm w-full justify-center select-none shadow-sm">
-                  <Lock className="w-4 h-4 text-slate-500" />
-                  <span>محتوى مغلق (كورس مخصص لمعلم آخر)</span>
+                <span className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-[10px] bg-[var(--paper-raised)] px-6 text-[15px] text-slate-600 dark:text-slate-300">
+                  <Lock className="h-4 w-4" aria-hidden="true" />
+                  الكورس ده لمدرس تاني
                 </span>
               )
             ) : (
-              // A guest can't redeem a code without an account — both buttons
-              // used to point at /login, which made "اشترك الآن" a lie (it
-              // never opened the redemption dialog). One honest CTA instead.
-              <button
-                onClick={() => navigate('/login')}
-                className="px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 border border-emerald-600 text-white font-bold text-sm md:text-base rounded-xl shadow-lg shadow-emerald-500/25 transition-all cursor-pointer w-full justify-center flex items-center gap-2 group"
-              >
-                <Lock className="w-4.5 h-4.5 text-emerald-100 group-hover:scale-110 transition-transform" />
-                <span>سجّل دخولك للاشتراك في الكورس</span>
+              // A guest can't redeem a code without an account.
+              <button type="button" onClick={() => navigate('/login')} className="btn-primary h-12 w-full px-6 text-base">
+                <Lock className="h-4 w-4" aria-hidden="true" />
+                سجّل دخولك واشترك
               </button>
             )}
           </div>

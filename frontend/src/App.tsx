@@ -5,8 +5,7 @@ import { Eye, LogOut } from 'lucide-react';
 import LoadingScreen from './components/UI/LoadingScreen';
 import Header from './components/Header';
 import HomePage from './components/home/HomePage';
-import TeachersSection from './components/TeachersSection';
-import CoursesSection from './components/CoursesSection';
+import { CoursesCatalogPage, TeachersCatalogPage } from './components/site/CatalogPages';
 import Footer from './components/Footer';
 const SignupPage = lazy(() => import('./components/SignupPage'));
 const LoginPage = lazy(() => import('./components/LoginPage'));
@@ -128,9 +127,7 @@ export default function App() {
 
   const {
     coursesList,
-    pagination: coursesPagination,
     fetchCourses,
-    loadMore: handleLoadMoreCourses,
     addCourse,
     editCourse,
     deleteCourse
@@ -147,7 +144,12 @@ export default function App() {
   const isInstructorSession = isLoggedIn && userRole === 'instructor';
 
   useEffect(() => {
-    if (['/', '/teachers', '/courses'].includes(location.pathname) && !isInstructorSession) {
+    // `/teacher/:id` reads its teacher from this same list, so a shared link
+    // or a refresh on a teacher's page used to land on "not found" because
+    // nothing had fetched it yet.
+    const needsCatalogue =
+      ['/', '/teachers', '/courses'].includes(location.pathname) || location.pathname.startsWith('/teacher/');
+    if (needsCatalogue && !isInstructorSession) {
       fetchCourses(1, false);
       fetchTeachers();
     }
@@ -248,7 +250,10 @@ export default function App() {
         />
       )}
       
-      <main>
+      {/* `.sanad-theme` (index.css) re-skins the pages under it with the
+          "كراسة سند" system. Public pages first; student and dashboard
+          areas join in their own rollout groups. */}
+      <main className={['instructor', 'admin', 'student'].includes(view) || /^\/(play-video|exam)\//.test(location.pathname) ? undefined : 'sanad-theme'}>
         {/* The route-transition wait uses the SHARED LoadingScreen, the same one
             ProtectedRoute shows while it verifies permissions. `fullScreen` is
             off because this fallback renders inside <main>, under the header. */}
@@ -267,28 +272,11 @@ export default function App() {
           } />
           
           <Route path="/teachers" element={
-            <div className="pt-24 pb-12 bg-slate-50 dark:bg-slate-950 min-h-screen">
-              <TeachersSection
-                teachersList={teachersList.filter((t) => t.isActive !== false)}
-                onViewProfile={handleViewTeacherProfile}
-                isPreview={false}
-              />
-            </div>
+            <TeachersCatalogPage teachers={teachersList} onViewProfile={handleViewTeacherProfile} />
           } />
 
           <Route path="/courses" element={
-            <div className="pt-24 pb-12 bg-slate-50 dark:bg-slate-950 min-h-screen">
-              <CoursesSection
-                courses={coursesList}
-                isLoggedIn={isLoggedIn}
-                onNavigate={navigateTo as any}
-                onViewCourse={handleViewCourseDetails}
-                hasMore={coursesPagination.hasMore}
-                isLoading={coursesPagination.isLoading}
-                onLoadMore={handleLoadMoreCourses}
-                isPreview={false}
-              />
-            </div>
+            <CoursesCatalogPage onViewCourse={handleViewCourseDetails} />
           } />
 
           <Route path="/signup" element={

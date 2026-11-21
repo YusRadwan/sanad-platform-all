@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import PlatformLogo from './PlatformLogo';
 import { User, Lock, Eye, EyeOff, AlertCircle, ArrowLeft } from 'lucide-react';
 import { LoginPageProps } from '../types/index';
 import { authService } from '../services/authService';
@@ -84,34 +83,23 @@ export default function LoginPage({ onBackToHome, onNavigateToSignup, onLoginSuc
   };
 
   return (
-    <div dir="rtl" className="min-h-[85vh] lg:min-h-[calc(100vh-98px)] flex flex-col lg:flex-row bg-slate-50 dark:bg-slate-900/10 font-sans transition-colors duration-300 select-none">
+    <div dir="rtl" className="min-h-[calc(100vh-72px)] flex bg-[var(--paper)]">
       {/* RIGHT half — login-form panel. Default DOM order renders it
           physically on the right under `dir="rtl"`, same convention
           SignupPage.tsx uses for its own two-column split. */}
-      <div className="relative w-full lg:w-1/2 flex items-center justify-center overflow-y-auto py-6 px-4 sm:px-6 lg:px-8">
-      {/* Dynamic Background Atmosphere Elements */}
-      <div className="absolute top-1/4 right-1/4 w-[280px] h-[280px] bg-blue-600/12 dark:bg-blue-600/15 rounded-full blur-[90px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-1/4 left-1/4 w-[320px] h-[320px] bg-indigo-500/8 dark:bg-indigo-500/12 rounded-full blur-[100px] -z-10 pointer-events-none" />
-
+      <div className="relative w-full flex items-center justify-center py-12 px-5 sm:px-8">
       <div className="max-w-md w-full">
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 shadow-2xl rounded-3xl p-6 relative overflow-hidden"
+            className="bg-[var(--paper-card)] border border-[var(--hair-strong)] rounded-[20px] p-6 sm:p-8 relative"
             id="unified_login_card"
           >
             {/* Header info */}
-            <div className="text-center mb-5 pb-3 border-b border-slate-100 dark:border-slate-800/60">
-              <div className="relative w-16 h-16 mx-auto mb-2">
-                <PlatformLogo className="w-full h-full object-contain" />
-                <div className="absolute -bottom-1 -left-1 w-5 h-5 rounded-full bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center border-2 border-white dark:border-slate-900 shadow-md">
-                  <Lock className="w-3 h-3" />
-                </div>
-              </div>
-              <h1 className="text-xl font-black text-slate-900 dark:text-white">
-                تسجيل الدخول
-              </h1>
+            <div className="mb-6 flex flex-col gap-1">
+              <h1 className="m-0 font-kufi text-[30px] font-semibold leading-[1.35]">دخول</h1>
+              <p className="m-0 text-[15px] text-slate-500 dark:text-slate-400">ادخل على حسابك وكمّل كورساتك</p>
             </div>
 
             {/* Error view */}
@@ -146,7 +134,7 @@ export default function LoginPage({ onBackToHome, onNavigateToSignup, onLoginSuc
                   />
                   <User className="absolute right-4 top-3.5 w-4.5 h-4.5 text-slate-400 dark:text-slate-500 pointer-events-none" />
                 </div>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold leading-relaxed">
+                <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed">
                   للطلاب: رقم الهاتف المسجل. للأساتذة والإدارة: اسم المستخدم المعطى لكم.
                 </p>
               </div>
@@ -175,7 +163,7 @@ export default function LoginPage({ onBackToHome, onNavigateToSignup, onLoginSuc
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute left-4 top-3.5 text-slate-400 hover:text-blue-500 transition-all p-0.5 rounded cursor-pointer"
-                    aria-label="Toggle Password Visibility"
+                    aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
                   >
                     {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
                   </button>
@@ -200,8 +188,7 @@ export default function LoginPage({ onBackToHome, onNavigateToSignup, onLoginSuc
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full flex items-center justify-center gap-2.5 text-white py-3 px-6 rounded-2xl font-black text-base cursor-pointer ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-                style={{ backgroundColor: '#3544e1' }}
+                className={`btn-primary w-full h-12 text-base ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">
@@ -211,7 +198,7 @@ export default function LoginPage({ onBackToHome, onNavigateToSignup, onLoginSuc
                 ) : (
                   <>
                     <span>تسجيل الدخول</span>
-                    <ArrowLeft className="w-5 h-5 text-white" />
+                    <ArrowLeft className="w-5 h-5" aria-hidden="true" />
                   </>
                 )}
               </button>
@@ -220,11 +207,10 @@ export default function LoginPage({ onBackToHome, onNavigateToSignup, onLoginSuc
 
             {/* Field 5: Signup Link */}
             <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800/60 text-center text-sm">
-              <span className="text-slate-500 dark:text-slate-400">ليس لديك حساب؟ </span>
+              <span className="text-slate-500 dark:text-slate-400">معندكش حساب؟ </span>
               <button 
                 onClick={onNavigateToSignup}
-                className="font-extrabold hover:underline cursor-pointer select-none p-1"
-                style={{ color: '#3544e1' }}
+                className="link-draw font-medium cursor-pointer p-1 text-[color:var(--sanad-ink)] dark:text-[color:var(--sanad-ink-on-dark)]"
               >
                 إنشاء حساب
               </button>
@@ -234,21 +220,6 @@ export default function LoginPage({ onBackToHome, onNavigateToSignup, onLoginSuc
       </div>
       </div>
 
-      {/* LEFT half — solid brand-blue panel with the login illustration.
-          Default DOM order (second child) renders it physically on the left
-          under `dir="rtl"`. Hidden below `lg`, same as SignupPage.tsx's
-          own panel — a 50/50 split has no room to spare on a phone. */}
-      <div
-        className="hidden lg:flex lg:w-1/2 items-center justify-center p-8 shrink-0"
-        style={{ backgroundColor: '#3544e1' }}
-      >
-        <img
-          src="/branding/signin.svg"
-          alt=""
-          aria-hidden="true"
-          className="w-full max-w-md h-auto object-contain"
-        />
-      </div>
     </div>
   );
 }
