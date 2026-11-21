@@ -106,9 +106,6 @@ export default function Revenue() {
   return (
     <div className="relative p-4 md:p-8" dir="rtl">
       {/* Decorative background glows */}
-      <div className="absolute -top-6 right-1/4 w-[340px] h-[340px] bg-amber-500/10 dark:bg-amber-500/15 rounded-full blur-[100px] -z-10 pointer-events-none" />
-      <div className="absolute top-40 left-1/4 w-[380px] h-[380px] bg-emerald-500/8 dark:bg-emerald-500/12 rounded-full blur-[110px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-0 right-1/3 w-[300px] h-[300px] bg-blue-500/6 dark:bg-blue-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
       <PageHeader
         icon={Activity}
@@ -163,7 +160,7 @@ export default function Revenue() {
             with near-invisible white-on-white text instead of the intended
             solid blue.
           */}
-          <Card className="group h-full flex flex-col justify-between bg-blue-600! dark:bg-blue-600! border-blue-600! dark:border-blue-600! text-white shadow-md shadow-blue-600/20 transition-shadow hover:shadow-lg">
+          <Card className="group h-full flex flex-col justify-between bg-blue-600! dark:bg-blue-600! border-blue-600! dark:border-blue-600! text-white shadow-md transition-shadow hover:shadow-lg">
             <div className="flex justify-between items-start mb-4">
               <div className="p-3 rounded-2xl bg-white/15 transition-transform group-hover:scale-110">
                 <DollarSign className="w-6 h-6" />
@@ -233,7 +230,7 @@ export default function Revenue() {
               onClick={fetchRevenueData}
               title="تحديث"
               aria-label="تحديث"
-              className="shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-shadow"
+              className="shadow-lg hover:shadow-xl transition-shadow"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             </Button>

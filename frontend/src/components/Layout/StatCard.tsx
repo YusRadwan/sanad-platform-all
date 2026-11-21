@@ -46,7 +46,6 @@ export default function StatCard({ icon: Icon, label, value, color, caption, ind
       className="h-full"
     >
       <Card className="group relative h-full overflow-hidden p-3.5 transition-shadow hover:shadow-md">
-        <div className={`absolute top-1/2 -left-10 -translate-y-1/2 w-32 h-32 rounded-full transition-transform group-hover:scale-110 ${tone.blob}`} aria-hidden="true" />
 
         <div className="relative flex items-start justify-between gap-3 mb-2">
           <span className="text-sm font-bold text-slate-500 dark:text-slate-400">{label}</span>

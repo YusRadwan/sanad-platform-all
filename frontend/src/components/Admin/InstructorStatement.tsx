@@ -118,9 +118,6 @@ export default function InstructorStatement() {
 
   return (
     <div className="relative p-4 md:p-8 space-y-6 md:space-y-8" dir="rtl">
-      <div className="absolute -top-6 right-1/4 w-[340px] h-[340px] bg-emerald-500/10 dark:bg-emerald-500/15 rounded-full blur-[100px] -z-10 pointer-events-none" />
-      <div className="absolute top-40 left-1/4 w-[380px] h-[380px] bg-amber-500/8 dark:bg-amber-500/12 rounded-full blur-[110px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-0 right-1/3 w-[300px] h-[300px] bg-sky-500/6 dark:bg-sky-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
       {/* Header */}
       <PageHeader

@@ -222,7 +222,7 @@ export default function InstructorSystem({
   const headerContent = null;
 
   return (
-    <div dir="rtl" className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 font-sans transition-colors duration-300 flex flex-col">
+    <div dir="rtl" className="sanad-theme min-h-screen flex flex-col">
 
       {/* 1. FIXED PERSISTENT TOP BAR */}
       {/* SHAPE pass: the bar itself picked up a soft rounded-bottom silhouette
@@ -231,8 +231,7 @@ export default function InstructorSystem({
           of its contents (those keep whatever styling they already had).
           Position, height (h-20, still matching Sidebar.tsx's `lg:top-20`
           anchor) and every handler are unchanged. */}
-      <header className="sticky top-0 z-40 w-full rounded-b-[28px] bg-white/80 dark:bg-slate-950/80 border-b border-x border-slate-200/70 dark:border-slate-800/70 backdrop-blur-xl backdrop-saturate-150 shadow-[0_1px_2px_0_rgb(15_23_42/0.04),0_16px_36px_-16px_rgba(37,99,235,0.28)] dark:shadow-[0_12px_32px_-18px_rgb(0_0_0/0.75)] transition-colors duration-300">
-        <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-l from-transparent via-blue-600 to-transparent opacity-70 pointer-events-none" />
+      <header className="sanad-chrome sticky top-0 z-40 w-full bg-[var(--paper)] border-b border-[var(--hair)]">
 
         <div className="w-full px-6 md:px-12 lg:px-16 h-20 flex items-center justify-between">
 
@@ -277,11 +276,11 @@ export default function InstructorSystem({
               {/* Bare mark, no tile and no frame behind it — see Header.tsx. */}
               <PlatformLogo className="w-19 h-19 object-contain shrink-0 transition-transform duration-300 group-hover:scale-105 group-active:scale-95" />
               <div className="flex flex-col justify-center leading-none text-right">
-                <span className="text-[1.55rem] font-black tracking-tight bg-gradient-to-l from-blue-700 via-blue-500 to-indigo-600 dark:from-blue-300 dark:via-blue-400 dark:to-indigo-400 bg-clip-text text-transparent font-sans">
+                <span className="text-[1.55rem] font-black tracking-tight bg-blue-700 bg-clip-text text-transparent font-sans">
                   سند
                 </span>
                 <span className="mt-1.5 flex items-center gap-1.5">
-                  <span className="h-px w-3 rounded-full bg-gradient-to-l from-transparent to-blue-500/40 group-hover:to-blue-500/80 transition-colors duration-300" />
+                  <span className="h-px w-3 rounded-full bg-gradient-to-l from-transparent to-blue-500/40 transition-colors duration-300" />
                   <span className="text-[9px] font-extrabold tracking-[0.3em] text-slate-400 dark:text-slate-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors duration-300">
                     بوابة المعلم
                   </span>
@@ -298,7 +297,7 @@ export default function InstructorSystem({
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className={`flex items-center gap-2.5 ps-1.5 pe-3 py-1.5 rounded-full ring-1 ring-inset transition-all duration-200 cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
                   isDropdownOpen
-                    ? 'bg-white dark:bg-slate-800 ring-blue-500/40 shadow-md shadow-blue-600/10'
+                    ? 'bg-white dark:bg-slate-800 ring-blue-500/40 shadow-md '
                     : 'bg-slate-100/90 hover:bg-white dark:bg-slate-900/90 dark:hover:bg-slate-800 ring-slate-900/[0.06] dark:ring-white/10 hover:ring-blue-500/25 hover:shadow-sm'
                 }`}
                 aria-label="User Dropdown"
@@ -319,7 +318,7 @@ export default function InstructorSystem({
 
               <AccountMenuPanel isOpen={isDropdownOpen} onClose={() => setIsDropdownOpen(false)}>
                 {/* Identity block */}
-                <div className="relative overflow-hidden flex items-center gap-3 px-3 py-3.5 mb-2 rounded-xl bg-gradient-to-l from-blue-50 to-indigo-50/60 dark:from-blue-950/40 dark:to-indigo-950/20 ring-1 ring-inset ring-blue-500/10 dark:ring-white/[0.06] text-right">
+                <div className="relative overflow-hidden flex items-center gap-3 px-3 py-3.5 mb-2 rounded-xl bg-blue-50 ring-1 ring-inset ring-blue-500/10 dark:ring-white/[0.06] text-right">
                   <Avatar
                     initial={currentTeacher.name.charAt(0)}
                     imageUrl={currentTeacher.image}
@@ -352,7 +351,7 @@ export default function InstructorSystem({
                   }}
                   className={`${menuItemClass} text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30`}
                 >
-                  <span className={`${menuIconClass} bg-rose-50 text-rose-600 ring-rose-500/10 dark:bg-rose-950/40 dark:text-rose-400 dark:ring-white/10 group-hover/item:bg-rose-600 group-hover/item:text-white group-hover/item:ring-transparent group-hover/item:shadow-sm group-hover/item:shadow-rose-600/30`}>
+                  <span className={`${menuIconClass} bg-rose-50 text-rose-600 ring-rose-500/10 dark:bg-rose-950/40 dark:text-rose-400 dark:ring-white/10 group-hover/item:bg-rose-600 group-hover/item:text-white group-hover/item:ring-transparent group-hover/item:shadow-sm group-hover/item:`}>
                     <LogOut className="w-4 h-4" />
                   </span>
                   <span>تسجيل الخروج</span>

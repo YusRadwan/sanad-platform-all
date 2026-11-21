@@ -50,10 +50,10 @@ export function SidebarNavHeading({ heading, collapsed }: { heading: string; col
   return (
     <div className={`px-3 mb-2.5 flex items-center gap-2.5 ${collapsed ? 'lg:hidden' : ''}`}>
       <span className="w-1 h-1 rounded-full bg-white/60 dark:bg-blue-400/70" />
-      <span className="text-[10px] font-black tracking-[0.1em] text-blue-200/70 dark:text-slate-500 whitespace-nowrap uppercase">
+      <span className="text-[11px] font-medium text-blue-100/70 dark:text-slate-400 whitespace-nowrap">
         {heading}
       </span>
-      <span className="flex-1 h-px bg-gradient-to-l from-white/15 dark:from-slate-700 to-transparent" />
+      <span className="flex-1 h-px bg-white/10 dark:bg-slate-800" />
     </div>
   );
 }
@@ -90,7 +90,7 @@ export default function SidebarNavItem({
       // styled bubble below is purely visual.
       title={label}
       onClick={onClick}
-      className={`group relative w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 dark:focus-visible:ring-blue-500/40 ${
+      className={`group relative w-full flex items-center justify-between px-3 py-2.5 rounded-[10px] text-[13px] font-medium cursor-pointer transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 dark:focus-visible:ring-blue-500/40 ${
         collapsed ? 'lg:justify-center lg:px-0' : ''
       } ${
         isActive
@@ -101,7 +101,7 @@ export default function SidebarNavItem({
       {/* Accent bar on the row's inner edge (right, RTL) — solid presence, no
           travelling animation, just a quick fade in/out with the row itself. */}
       <span
-        className={`absolute right-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-white dark:bg-blue-400 shadow-[0_0_8px_rgba(255,255,255,0.5)] dark:shadow-[0_0_8px_rgba(96,165,250,0.5)] transition-opacity duration-150 ${
+        className={`absolute right-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-white dark:bg-blue-400 transition-opacity duration-150 ${
           isActive ? 'opacity-100' : 'opacity-0'
         }`}
       />

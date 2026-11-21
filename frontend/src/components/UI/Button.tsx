@@ -37,7 +37,7 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    'bg-blue-600 text-white border border-transparent shadow-sm shadow-blue-600/20 hover:bg-blue-700 active:bg-blue-800 focus-visible:ring-blue-500',
+    'bg-blue-600 text-white border border-transparent shadow-sm  hover:bg-blue-700 active:bg-blue-800 focus-visible:ring-blue-500',
   secondary:
     'bg-slate-100 text-slate-800 border border-slate-200/70 hover:bg-slate-200 active:bg-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-700 focus-visible:ring-slate-400',
   outline:
@@ -45,11 +45,11 @@ const VARIANTS: Record<ButtonVariant, string> = {
   ghost:
     'bg-transparent text-slate-600 border border-transparent hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white focus-visible:ring-slate-400',
   success:
-    'bg-emerald-600 text-white border border-transparent shadow-sm shadow-emerald-600/20 hover:bg-emerald-700 active:bg-emerald-800 focus-visible:ring-emerald-500',
+    'bg-emerald-600 text-white border border-transparent shadow-sm  hover:bg-emerald-700 active:bg-emerald-800 focus-visible:ring-emerald-500',
   danger:
-    'bg-rose-600 text-white border border-transparent shadow-sm shadow-rose-600/20 hover:bg-rose-700 active:bg-rose-800 focus-visible:ring-rose-500',
+    'bg-rose-600 text-white border border-transparent shadow-sm  hover:bg-rose-700 active:bg-rose-800 focus-visible:ring-rose-500',
   warning:
-    'bg-amber-500 text-white border border-transparent shadow-sm shadow-amber-500/20 hover:bg-amber-600 active:bg-amber-700 focus-visible:ring-amber-400',
+    'bg-amber-500 text-white border border-transparent shadow-sm  hover:bg-amber-600 active:bg-amber-700 focus-visible:ring-amber-400',
 };
 
 const SIZES: Record<ButtonSize, string> = {

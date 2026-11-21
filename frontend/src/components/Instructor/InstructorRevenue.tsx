@@ -80,9 +80,6 @@ export default function InstructorRevenue() {
     <div dir="rtl" className="relative space-y-8 animate-in fade-in duration-300 text-right font-sans min-h-screen">
 
       {/* Decorative background glows */}
-      <div className="absolute -top-6 right-1/4 w-[340px] h-[340px] bg-blue-600/10 dark:bg-blue-600/15 rounded-full blur-[100px] -z-10 pointer-events-none" />
-      <div className="absolute top-40 left-1/4 w-[380px] h-[380px] bg-violet-500/8 dark:bg-violet-500/12 rounded-full blur-[110px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-0 right-1/3 w-[300px] h-[300px] bg-emerald-500/6 dark:bg-emerald-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
       {/* Header */}
       <PageHeader
@@ -153,7 +150,7 @@ export default function InstructorRevenue() {
             >
               <Card
                 radius="panel"
-                className="group relative h-full overflow-hidden flex flex-col justify-between transition-shadow hover:shadow-md bg-gradient-to-br from-indigo-600 to-purple-600 border-transparent text-white shadow-lg shadow-indigo-600/20"
+                className="group relative h-full overflow-hidden flex flex-col justify-between transition-shadow hover:shadow-md bg-indigo-600 border-transparent text-white shadow-lg"
               >
                 <div className="absolute inset-x-0 top-0 h-1 bg-white/30" />
                 <div className="flex items-center justify-between gap-3 mb-4">

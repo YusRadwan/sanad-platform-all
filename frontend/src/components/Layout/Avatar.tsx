@@ -72,7 +72,7 @@ export default function Avatar({
 
   return (
     <div
-      className={`${SIZE[size]} ${shape} shrink-0 overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 text-white flex items-center justify-center font-black shadow-sm shadow-blue-600/30 ${ringClassName} ${className}`}
+      className={`${SIZE[size]} ${shape} shrink-0 overflow-hidden bg-blue-500 text-white flex items-center justify-center font-black shadow-sm  ${ringClassName} ${className}`}
     >
       {showImage ? (
         <img

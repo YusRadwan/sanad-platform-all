@@ -470,9 +470,6 @@ export default function GroupManagement({ courses = [] }: GroupManagementProps) 
 
   return (
     <div dir="rtl" className="relative space-y-8 animate-in fade-in duration-300 text-right font-sans min-h-screen">
-      <div className="absolute -top-6 right-1/4 w-[340px] h-[340px] bg-blue-600/10 dark:bg-blue-600/15 rounded-full blur-[100px] -z-10 pointer-events-none" />
-      <div className="absolute top-40 left-1/4 w-[380px] h-[380px] bg-violet-500/8 dark:bg-violet-500/12 rounded-full blur-[110px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-0 right-1/3 w-[300px] h-[300px] bg-emerald-500/6 dark:bg-emerald-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
       <PageHeader
         icon={Users}
@@ -747,7 +744,7 @@ export default function GroupManagement({ courses = [] }: GroupManagementProps) 
                       disabled={coursesForGrade.length === 0 || isAdding}
                       isLoading={isAdding}
                       loadingText="جاري إضافة المجموعة..."
-                      className="w-full md:w-auto shadow-lg shadow-rose-500/20 hover:shadow-xl hover:shadow-rose-500/30 transition-shadow"
+                      className="w-full md:w-auto shadow-lg hover:shadow-xl transition-shadow"
                     >
                       إرسال المجموعة وتفعيل الجدولة
                     </Button>
@@ -1003,7 +1000,7 @@ export default function GroupManagement({ courses = [] }: GroupManagementProps) 
                         disabled={isEditing}
                         isLoading={isEditing}
                         loadingText="جاري حفظ التعديلات..."
-                        className="w-full md:w-auto shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 transition-shadow"
+                        className="w-full md:w-auto shadow-lg hover:shadow-xl transition-shadow"
                       >
                         حفظ جميع التعديلات الحالية
                       </Button>
@@ -1059,7 +1056,7 @@ export default function GroupManagement({ courses = [] }: GroupManagementProps) 
                                 variant="danger"
                                 icon={Trash2}
                                 onClick={() => setShowConfirmDeleteAlert(true)}
-                                className="flex-1 shadow-lg shadow-red-500/20 hover:shadow-xl hover:shadow-red-500/30 transition-shadow"
+                                className="flex-1 shadow-lg hover:shadow-xl transition-shadow"
                               >
                                 طلب حذف وتصفية المجموعة
                               </Button>
@@ -1103,7 +1100,7 @@ export default function GroupManagement({ courses = [] }: GroupManagementProps) 
                                 isLoading={isDeleting}
                                 loadingText="جاري الحذف..."
                                 onClick={executeGroupDeletion}
-                                className="flex-1 shadow-lg shadow-red-500/20 hover:shadow-xl hover:shadow-red-500/30 transition-shadow"
+                                className="flex-1 shadow-lg hover:shadow-xl transition-shadow"
                               >
                                 نعم، احذف نهائياً بلا رجوع
                               </Button>

@@ -51,7 +51,9 @@ export default function Sidebar({ isOpen, onClose, headerContent, children, over
   // not the Tailwind `blue-900` swatch this used to be pinned to) in light
   // mode, and in dark mode the same slate-950/slate-800 pair the topbars in
   // AdminSystem.tsx and InstructorSystem.tsx already use for their surface.
-  const SURFACE = 'bg-[#3544e1] dark:bg-slate-950 border-[#2635b0] dark:border-slate-800';
+  // Calm dashboard variant of the notebook system: deep ink panel, not the
+  // saturated brand blue (the blue is kept for the one active item and actions).
+  const SURFACE = 'bg-[#1D2340] dark:bg-[#0E1024] border-[#2A3050] dark:border-slate-800';
 
   const asideClass = railMode
     ? [
@@ -105,7 +107,7 @@ export default function Sidebar({ isOpen, onClose, headerContent, children, over
       )}
 
       <aside
-        className={`${asideClass} shadow-[4px_0_32px_-12px_rgba(53,68,225,0.35)]`}
+        className={`${asideClass}`}
         // A single, faint inner seam of light along the panel's LEFT edge (the
         // boundary against the content area, RTL) — the one place a lighter
         // tone touches the shell itself rather than a nav row. Left as ONE
@@ -133,8 +135,6 @@ export default function Sidebar({ isOpen, onClose, headerContent, children, over
                     light; on slate-950 it would read as grey dust, so dark mode
                     tints the same two blobs with the brand blue/indigo instead
                     — same size, same blur, same positions, colour only. */}
-                <div className="pointer-events-none absolute -top-10 -right-8 w-32 h-32 rounded-full bg-white/10 dark:bg-blue-500/10 blur-3xl" />
-                <div className="pointer-events-none absolute -top-6 -left-10 w-28 h-28 rounded-full bg-indigo-300/10 dark:bg-indigo-500/10 blur-3xl" />
               </>
             )}
             <button

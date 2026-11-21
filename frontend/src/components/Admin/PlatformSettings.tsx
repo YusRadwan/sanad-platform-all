@@ -394,7 +394,7 @@ export default function PlatformSettings(_props: PlatformSettingsProps) {
             onClick={() => handleSave('social')}
             disabled={!hasUnsavedChanges.social}
             variant={hasUnsavedChanges.social ? 'primary' : 'secondary'}
-            className="shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-shadow"
+            className="shadow-lg hover:shadow-xl transition-shadow"
           >
             حفظ التغييرات
           </Button>
@@ -509,7 +509,7 @@ export default function PlatformSettings(_props: PlatformSettingsProps) {
               onClick={() => handleSave(type)}
               disabled={!isUnsaved}
               variant={isUnsaved ? 'primary' : 'secondary'}
-              className="shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-shadow"
+              className="shadow-lg hover:shadow-xl transition-shadow"
             >
               حفظ التغييرات
             </Button>
@@ -575,7 +575,7 @@ export default function PlatformSettings(_props: PlatformSettingsProps) {
             onClick={() => handleSave('support')}
             disabled={!hasUnsavedChanges.support}
             variant={hasUnsavedChanges.support ? 'primary' : 'secondary'}
-            className="shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-shadow"
+            className="shadow-lg hover:shadow-xl transition-shadow"
           >
             حفظ التغييرات
           </Button>
@@ -718,9 +718,6 @@ export default function PlatformSettings(_props: PlatformSettingsProps) {
 
   return (
     <div className="space-y-6 lg:space-y-8 relative">
-      <div className="absolute -top-6 right-1/4 w-[340px] h-[340px] bg-blue-600/10 dark:bg-blue-600/15 rounded-full blur-[100px] -z-10 pointer-events-none" />
-      <div className="absolute top-40 left-1/4 w-[380px] h-[380px] bg-violet-500/8 dark:bg-violet-500/12 rounded-full blur-[110px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-0 right-1/3 w-[300px] h-[300px] bg-sky-500/6 dark:bg-sky-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
       {/* Page Header */}
       <PageHeader
@@ -765,7 +762,7 @@ export default function PlatformSettings(_props: PlatformSettingsProps) {
               <motion.div key={activeTab} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
                 <Card padding="lg" className="relative overflow-hidden">
                   {/* Colored top accent matching the active section's icon chip. */}
-                  <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-l from-blue-600 via-indigo-500 to-violet-500" />
+                  <div className="absolute inset-x-0 top-0 h-1 bg-blue-600" />
                   {activeTab === 'social' && renderSocialSettings()}
                   {activeTab === 'privacy' && renderEditor('privacy', 'سياسة الخصوصية', Shield, privacyPolicy, setPrivacyPolicy)}
                   {activeTab === 'terms' && renderEditor('terms', 'الشروط والأحكام', FileText, termsConditions, setTermsConditions)}

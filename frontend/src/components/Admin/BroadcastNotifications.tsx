@@ -442,9 +442,6 @@ export default function BroadcastNotifications() {
 
   return (
     <div dir="rtl" className="relative space-y-8 animate-in fade-in duration-300 text-right font-sans min-h-screen">
-      <div className="absolute -top-6 right-1/4 w-[340px] h-[340px] bg-blue-600/10 dark:bg-blue-600/15 rounded-full blur-[100px] -z-10 pointer-events-none" />
-      <div className="absolute top-40 left-1/4 w-[380px] h-[380px] bg-sky-500/8 dark:bg-sky-500/12 rounded-full blur-[110px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-0 right-1/3 w-[300px] h-[300px] bg-violet-500/6 dark:bg-violet-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
       {/* 1. TOP HEADER & BAR */}
       <PageHeader
@@ -508,7 +505,7 @@ export default function BroadcastNotifications() {
               onClick={() => setViewMode('compose')}
               className={`w-full flex items-center gap-3 rounded-2xl p-3 text-right transition-all ${
                 viewMode === 'compose'
-                  ? 'bg-gradient-to-l from-blue-600 to-indigo-500 text-white shadow-lg shadow-blue-500/25'
+                  ? 'bg-blue-600 text-white shadow-lg '
                   : 'hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
               }`}
             >
@@ -530,7 +527,7 @@ export default function BroadcastNotifications() {
               onClick={() => setViewMode('manage')}
               className={`w-full flex items-center gap-3 rounded-2xl p-3 text-right transition-all ${
                 viewMode === 'manage'
-                  ? 'bg-gradient-to-l from-blue-600 to-indigo-500 text-white shadow-lg shadow-blue-500/25'
+                  ? 'bg-blue-600 text-white shadow-lg '
                   : 'hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300'
               }`}
             >
@@ -612,7 +609,6 @@ export default function BroadcastNotifications() {
                 <Card className="relative overflow-hidden">
 
                   {/* Visual Header Decoration */}
-                  <div className="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-l from-blue-600 to-indigo-500" />
 
                   <CardHeader
                     className="mt-1"
@@ -885,7 +881,7 @@ export default function BroadcastNotifications() {
                   icon={Send}
                   fullWidth
                   disabled={isSubmitting}
-                  className="flex-1 shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-shadow"
+                  className="flex-1 shadow-lg hover:shadow-xl transition-shadow"
                 >
                   {isSubmitting
                     ? 'جارٍ الإرسال إلى الخادم...'

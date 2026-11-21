@@ -198,7 +198,7 @@ function VisibilityPicker({ value, onChange }: { value: CourseVisibility; onChan
           >
             <div className={cn(
               'w-11 h-11 rounded-xl flex items-center justify-center transition-colors',
-              selected ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/25' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400',
+              selected ? 'bg-blue-600 text-white shadow-sm ' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400',
             )}>
               <Icon className="w-5 h-5" aria-hidden="true" />
             </div>
@@ -548,9 +548,6 @@ export default function CourseManagement({ courses, onAddCourse, onEditCourse, o
 
 return (
   <div dir="rtl" className="relative space-y-8 animate-in fade-in duration-300 text-right font-sans min-h-screen">
-      <div className="absolute -top-6 right-1/4 w-[340px] h-[340px] bg-blue-600/10 dark:bg-blue-600/15 rounded-full blur-[100px] -z-10 pointer-events-none" />
-      <div className="absolute top-40 left-1/4 w-[380px] h-[380px] bg-violet-500/8 dark:bg-violet-500/12 rounded-full blur-[110px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-0 right-1/3 w-[300px] h-[300px] bg-emerald-500/6 dark:bg-emerald-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
       <PageHeader
         icon={Layers}
@@ -805,7 +802,7 @@ return (
                             disabled={isAdding}
                             isLoading={isAdding}
                             loadingText="جاري إضافة ونشر الكورس..."
-                            className="shadow-lg shadow-rose-500/20 hover:shadow-xl hover:shadow-rose-500/30 transition-shadow"
+                            className="shadow-lg hover:shadow-xl transition-shadow"
                           >
                             تأكيد ونشر الكورس على المنصة
                           </Button>
@@ -895,10 +892,9 @@ return (
                                       onClick={() => handleSelectCourseForEdit(course)}
                                       className="group relative text-right cursor-pointer w-full"
                                     >
-                                      <div className="absolute -inset-3 rounded-[32px] bg-gradient-to-br from-amber-400/30 via-orange-400/20 to-amber-500/30 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none -z-10" />
 
                                       {/* Floating thumbnail, straddling the card's top edge */}
-                                      <div className="relative w-[85%] mx-auto h-32 -mt-20 -mb-20 z-20 rounded-2xl overflow-hidden border-[3px] border-white dark:border-slate-900 shadow-xl transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-amber-500/25 group-hover:-translate-y-1">
+                                      <div className="relative w-[85%] mx-auto h-32 -mt-20 -mb-20 z-20 rounded-2xl overflow-hidden border-[3px] border-white dark:border-slate-900 shadow-xl transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-1">
                                         <img
                                           src={course.image}
                                           alt={course.title}
@@ -911,8 +907,8 @@ return (
                                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/10 to-transparent pointer-events-none" />
                                       </div>
 
-                                      <div className="relative rounded-[22px] p-[1.5px] bg-gradient-to-br from-amber-300 via-orange-300 to-amber-400 dark:from-amber-500 dark:via-orange-500 dark:to-amber-600">
-                                        <div className="relative flex flex-col rounded-[20.5px] bg-white dark:bg-slate-900 p-3 pt-16 overflow-hidden shadow-lg group-hover:shadow-2xl group-hover:shadow-amber-500/15 transition-shadow duration-500">
+                                      <div className="relative rounded-[22px] p-[1.5px] bg-amber-300">
+                                        <div className="relative flex flex-col rounded-[20.5px] bg-white dark:bg-slate-900 p-3 pt-16 overflow-hidden shadow-lg group-hover:shadow-2xl transition-shadow duration-500">
                                           <div className="flex flex-wrap gap-1.5 justify-center mb-2.5">
                                             {course.grade && (
                                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold border border-indigo-200/70 dark:border-indigo-500/25">
@@ -933,17 +929,17 @@ return (
 
                                           <div className="flex items-center justify-center mb-3">
                                             {hasDiscount ? (
-                                              <div className="flex items-center gap-1.5 bg-gradient-to-r from-rose-500 to-pink-600 px-3 py-1 rounded-lg shadow-sm">
+                                              <div className="flex items-center gap-1.5 bg-rose-500 px-3 py-1 rounded-lg shadow-sm">
                                                 <span className="text-sm font-black text-white tabular-nums">{formatNumber(discountNum, { maximumFractionDigits: 2 })} ج.م</span>
                                                 <span className="line-through text-white/60 text-[11px] font-bold tabular-nums">{formatNumber(priceNum, { maximumFractionDigits: 2 })}</span>
                                               </div>
                                             ) : priceNum > 0 ? (
-                                              <div className="flex items-center gap-1 bg-gradient-to-r from-indigo-500 to-blue-600 px-3 py-1 rounded-lg shadow-sm">
+                                              <div className="flex items-center gap-1 bg-indigo-500 px-3 py-1 rounded-lg shadow-sm">
                                                 <Tag className="w-3 h-3 text-white/80" />
                                                 <span className="text-sm font-black text-white tabular-nums">{formatNumber(priceNum, { maximumFractionDigits: 2 })} ج.م</span>
                                               </div>
                                             ) : (
-                                              <div className="flex items-center gap-1 bg-gradient-to-r from-emerald-500 to-teal-600 px-3 py-1 rounded-lg shadow-sm">
+                                              <div className="flex items-center gap-1 bg-emerald-500 px-3 py-1 rounded-lg shadow-sm">
                                                 <Sparkles className="w-3 h-3 text-white" />
                                                 <span className="text-xs font-black text-white">مجاني بالكامل</span>
                                               </div>
@@ -1175,7 +1171,7 @@ return (
                                   disabled={isEditing}
                                   isLoading={isEditing}
                                   loadingText="جاري حفظ التعديلات..."
-                                  className="shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30 transition-shadow"
+                                  className="shadow-lg hover:shadow-xl transition-shadow"
                                 >
                                   تطبيق وحفظ التعديلات الحالية
                                 </Button>

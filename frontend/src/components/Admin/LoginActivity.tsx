@@ -206,9 +206,6 @@ export default function LoginActivity() {
     <div className="relative space-y-6 lg:space-y-8">
 
       {/* Decorative background glows */}
-      <div className="absolute -top-6 right-1/4 w-[340px] h-[340px] bg-rose-500/8 dark:bg-rose-500/12 rounded-full blur-[100px] -z-10 pointer-events-none" />
-      <div className="absolute top-40 left-1/4 w-[380px] h-[380px] bg-blue-600/8 dark:bg-blue-600/12 rounded-full blur-[110px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-0 right-1/3 w-[300px] h-[300px] bg-violet-500/6 dark:bg-violet-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
       <PageHeader
         className="mb-0"
@@ -230,7 +227,7 @@ export default function LoginActivity() {
         <StatCard index={3} label="أجهزة فريدة" value={stats.uniqueDevices} icon={Monitor} color="purple" />
 
         {/* The one deliberately saturated tile — it carries the security headline. */}
-        <Card className="flex flex-col justify-between bg-rose-600 dark:bg-rose-600 border-rose-600 dark:border-rose-600 text-white shadow-md shadow-rose-600/20">
+        <Card className="flex flex-col justify-between bg-rose-600 dark:bg-rose-600 border-rose-600 dark:border-rose-600 text-white shadow-md">
           <div className="flex items-center justify-between gap-3 mb-4">
             <h3 className="text-sm font-bold text-rose-100">محاولات مشبوهة</h3>
             <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">

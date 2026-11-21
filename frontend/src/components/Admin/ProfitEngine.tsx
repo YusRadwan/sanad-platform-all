@@ -105,9 +105,6 @@ export default function ProfitEngine() {
   return (
     <div className="relative p-4 md:p-8 space-y-6 md:space-y-8" dir="rtl">
       {/* Decorative background glows */}
-      <div className="absolute -top-6 right-1/4 w-[340px] h-[340px] bg-amber-500/10 dark:bg-amber-500/15 rounded-full blur-[100px] -z-10 pointer-events-none" />
-      <div className="absolute top-40 left-1/4 w-[380px] h-[380px] bg-emerald-500/8 dark:bg-emerald-500/12 rounded-full blur-[110px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-0 right-1/3 w-[300px] h-[300px] bg-blue-500/6 dark:bg-blue-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
       {/* Header */}
       <PageHeader
@@ -184,7 +181,7 @@ export default function ProfitEngine() {
                 >
                   <Card padding="none" className="overflow-hidden h-full flex flex-col group">
                     {/* Header strip with soft gradient */}
-                    <div className="h-16 bg-gradient-to-l from-amber-400/20 via-emerald-400/10 to-blue-400/10 dark:from-amber-500/15 dark:via-emerald-500/10 dark:to-blue-500/10 relative">
+                    <div className="h-16 bg-amber-400/20 relative">
                       <div className="absolute top-3 left-3">
                         <Badge tone="brand" size="sm" className="font-mono">
                           {percentage.toFixed(2)}%

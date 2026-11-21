@@ -90,10 +90,10 @@ const FORM_STEPS = [
 ];
 
 const STEP_TONES = {
-  blue: { bg: 'bg-blue-500', text: 'text-blue-600 dark:text-blue-400', ring: 'shadow-blue-500/30', line: 'from-blue-500/50' },
-  violet: { bg: 'bg-violet-500', text: 'text-violet-600 dark:text-violet-400', ring: 'shadow-violet-500/30', line: 'from-violet-500/50' },
-  emerald: { bg: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400', ring: 'shadow-emerald-500/30', line: 'from-emerald-500/50' },
-  amber: { bg: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400', ring: 'shadow-amber-500/30', line: 'from-amber-500/50' },
+  blue: { bg: 'bg-blue-500', text: 'text-blue-600 dark:text-blue-400', ring: '', line: 'from-blue-500/50' },
+  violet: { bg: 'bg-violet-500', text: 'text-violet-600 dark:text-violet-400', ring: '', line: 'from-violet-500/50' },
+  emerald: { bg: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400', ring: '', line: 'from-emerald-500/50' },
+  amber: { bg: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400', ring: '', line: 'from-amber-500/50' },
 } as const;
 
 /** One numbered, color-coded badge — placed above each form section. */
@@ -417,9 +417,6 @@ export default function AddStudent() {
     <div dir="rtl" className="relative space-y-6 text-right">
       {/* Decorative background glows — same low-opacity blurred-blob
           technique used on AddTeacher.tsx/LoginPage.tsx/SignupPage.tsx. */}
-      <div className="absolute -top-6 right-1/4 w-[320px] h-[320px] bg-blue-600/10 dark:bg-blue-600/15 rounded-full blur-[100px] -z-10 pointer-events-none" />
-      <div className="absolute top-52 left-1/4 w-[360px] h-[360px] bg-emerald-500/8 dark:bg-emerald-500/12 rounded-full blur-[110px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-0 right-1/3 w-[280px] h-[280px] bg-violet-500/6 dark:bg-violet-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
       {/* Page Header */}
       <PageHeader
@@ -442,7 +439,7 @@ export default function AddStudent() {
               transition={{ duration: 0.5 }}
             >
               <div className="text-center relative overflow-hidden">
-                <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-l from-emerald-500 to-emerald-400" />
+                <div className="absolute inset-x-0 top-0 h-1.5 bg-emerald-500" />
 
                 <div className="w-20 h-20 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 flex items-center justify-center mx-auto mb-6 mt-2">
                   <CheckCircle2 className="w-11 h-11" />
@@ -879,7 +876,7 @@ export default function AddStudent() {
                   size="lg"
                   fullWidth
                   trailingIcon={ArrowLeft}
-                  className="shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-shadow"
+                  className="shadow-lg hover:shadow-xl transition-shadow"
                 >
                   تسجيل حساب الطالب للأبد
                 </Button>

@@ -117,8 +117,6 @@ export default function TeacherApplications() {
 
   return (
     <div className="relative space-y-6 lg:space-y-8">
-      <div className="absolute -top-6 right-1/4 w-[340px] h-[340px] bg-blue-600/8 dark:bg-blue-600/12 rounded-full blur-[100px] -z-10 pointer-events-none" />
-      <div className="absolute top-40 left-1/4 w-[380px] h-[380px] bg-indigo-500/8 dark:bg-indigo-500/12 rounded-full blur-[110px] -z-10 pointer-events-none" />
 
       <PageHeader
         className="mb-0"

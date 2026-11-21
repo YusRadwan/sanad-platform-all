@@ -255,9 +255,6 @@ export default function ManageTeachers() {
     <div dir="rtl" className="relative space-y-8 animate-in fade-in duration-300 text-right">
 
       {/* Decorative background glows */}
-      <div className="absolute -top-6 left-1/4 w-[340px] h-[340px] bg-blue-600/10 dark:bg-blue-600/15 rounded-full blur-[100px] -z-10 pointer-events-none" />
-      <div className="absolute top-52 right-1/4 w-[380px] h-[380px] bg-amber-500/8 dark:bg-amber-500/12 rounded-full blur-[110px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-0 left-1/3 w-[300px] h-[300px] bg-sky-500/6 dark:bg-sky-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
       {/* 1. TOP HEADER & META BANNER */}
       <PageHeader

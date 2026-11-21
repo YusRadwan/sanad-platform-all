@@ -40,11 +40,11 @@ const FORM_STEPS = [
 ];
 
 const STEP_TONES = {
-  blue: { bg: 'bg-blue-500', text: 'text-blue-600 dark:text-blue-400', ring: 'shadow-blue-500/30', line: 'from-blue-500/50' },
-  violet: { bg: 'bg-violet-500', text: 'text-violet-600 dark:text-violet-400', ring: 'shadow-violet-500/30', line: 'from-violet-500/50' },
-  emerald: { bg: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400', ring: 'shadow-emerald-500/30', line: 'from-emerald-500/50' },
-  amber: { bg: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400', ring: 'shadow-amber-500/30', line: 'from-amber-500/50' },
-  sky: { bg: 'bg-sky-500', text: 'text-sky-600 dark:text-sky-400', ring: 'shadow-sky-500/30', line: 'from-sky-500/50' },
+  blue: { bg: 'bg-blue-500', text: 'text-blue-600 dark:text-blue-400', ring: '', line: 'from-blue-500/50' },
+  violet: { bg: 'bg-violet-500', text: 'text-violet-600 dark:text-violet-400', ring: '', line: 'from-violet-500/50' },
+  emerald: { bg: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400', ring: '', line: 'from-emerald-500/50' },
+  amber: { bg: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400', ring: '', line: 'from-amber-500/50' },
+  sky: { bg: 'bg-sky-500', text: 'text-sky-600 dark:text-sky-400', ring: '', line: 'from-sky-500/50' },
 } as const;
 
 /** One numbered, color-coded badge — reused by the top rail and by each section's own label. */
@@ -515,9 +515,6 @@ export default function AddTeacher({ onNavigateHome }: AddTeacherProps) {
       {/* Decorative background glows — same low-opacity blurred-blob
           technique already used on LoginPage.tsx/SignupPage.tsx, reused here
           rather than inventing a new visual language. */}
-      <div className="absolute -top-6 right-1/4 w-[340px] h-[340px] bg-blue-600/10 dark:bg-blue-600/15 rounded-full blur-[100px] -z-10 pointer-events-none" />
-      <div className="absolute top-40 left-1/4 w-[380px] h-[380px] bg-violet-500/8 dark:bg-violet-500/12 rounded-full blur-[110px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-0 right-1/3 w-[300px] h-[300px] bg-emerald-500/6 dark:bg-emerald-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
       {/* Header breadcrumb */}
       <PageHeader
@@ -632,7 +629,7 @@ export default function AddTeacher({ onNavigateHome }: AddTeacherProps) {
         >
           <Card
             radius="panel"
-            className="bg-gradient-to-l from-blue-50 via-slate-50 to-slate-50 dark:from-blue-500/10 dark:via-slate-900 dark:to-slate-900 border-blue-100 dark:border-blue-500/20 flex flex-col sm:flex-row items-center justify-between gap-4"
+            className="bg-blue-50 border-blue-100 dark:border-blue-500/20 flex flex-col sm:flex-row items-center justify-between gap-4"
           >
             <div className="flex items-center gap-2.5 text-slate-500 dark:text-slate-400 text-xs font-bold">
               <Sparkles className="w-4 h-4 text-blue-500 shrink-0" />
@@ -643,7 +640,7 @@ export default function AddTeacher({ onNavigateHome }: AddTeacherProps) {
               variant="success"
               size="lg"
               icon={CheckCircle2}
-              className="shrink-0 shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/30 transition-shadow"
+              className="shrink-0 shadow-lg hover:shadow-xl transition-shadow"
             >
               {isEditMode ? 'حفظ التغييرات وتحديث بيانات المدرس' : 'حفظ وإضافة المدرس للمنصة'}
             </Button>

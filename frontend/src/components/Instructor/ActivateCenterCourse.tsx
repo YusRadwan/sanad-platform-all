@@ -178,8 +178,6 @@ export default function ActivateCenterCourse() {
 
   return (
     <div dir="rtl" className="relative space-y-6 animate-in fade-in duration-300 text-right font-sans min-h-screen">
-      <div className="absolute -top-6 right-1/4 w-[340px] h-[340px] bg-emerald-600/10 dark:bg-emerald-600/15 rounded-full blur-[100px] -z-10 pointer-events-none" />
-      <div className="absolute top-40 left-1/4 w-[380px] h-[380px] bg-blue-500/8 dark:bg-blue-500/12 rounded-full blur-[110px] -z-10 pointer-events-none" />
 
       <PageHeader
         icon={Unlock}
