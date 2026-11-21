@@ -251,9 +251,9 @@ export default function App() {
       )}
       
       {/* `.sanad-theme` (index.css) re-skins the pages under it with the
-          "كراسة سند" system. Public pages first; student and dashboard
-          areas join in their own rollout groups. */}
-      <main className={['instructor', 'admin', 'student'].includes(view) || /^\/(play-video|exam)\//.test(location.pathname) ? undefined : 'sanad-theme'}>
+          "كراسة سند" system: public and student pages. The instructor and
+          admin dashboards carry the class on their own shells. */}
+      <main className={['instructor', 'admin'].includes(view) ? undefined : 'sanad-theme'}>
         {/* The route-transition wait uses the SHARED LoadingScreen, the same one
             ProtectedRoute shows while it verifies permissions. `fullScreen` is
             off because this fallback renders inside <main>, under the header. */}
@@ -518,57 +518,37 @@ export default function App() {
 
           <Route path="/student" element={
             <ProtectedRoute allowedRoles={['student']}>
-              <div className="py-24 bg-slate-50 dark:bg-slate-950 min-h-screen" dir="rtl">
-                <div className="container mx-auto px-6 md:px-12 lg:px-16">
                   <MyCourses 
                     username={username}
                     courses={coursesList}
                   />
-                </div>
-              </div>
             </ProtectedRoute>
           } />
 
           <Route path="/student/statistics" element={
             <ProtectedRoute allowedRoles={['student']}>
-              <div className="py-24 bg-slate-50 dark:bg-slate-950 min-h-screen" dir="rtl">
-                <div className="container mx-auto px-6 md:px-12 lg:px-16">
                   <StudentStatistics 
                     username={username}
                     courses={coursesList}
                   />
-                </div>
-              </div>
             </ProtectedRoute>
           } />
 
           <Route path="/student/watched-videos" element={
             <ProtectedRoute allowedRoles={['student']}>
-              <div className="py-24 bg-slate-50 dark:bg-slate-950 min-h-screen" dir="rtl">
-                <div className="container mx-auto px-6 md:px-12 lg:px-16">
                   <StudentWatchedVideos />
-                </div>
-              </div>
             </ProtectedRoute>
           } />
 
           <Route path="/student/completed-exams" element={
             <ProtectedRoute allowedRoles={['student']}>
-              <div className="py-24 bg-slate-50 dark:bg-slate-950 min-h-screen" dir="rtl">
-                <div className="container mx-auto px-6 md:px-12 lg:px-16">
                   <StudentCompletedExams />
-                </div>
-              </div>
             </ProtectedRoute>
           } />
 
           <Route path="/student/center" element={
             <ProtectedRoute allowedRoles={['student']}>
-              <div className="py-24 bg-slate-50 dark:bg-slate-950 min-h-screen" dir="rtl">
-                <div className="container mx-auto px-6 md:px-12 lg:px-16">
                   <CenterStudent />
-                </div>
-              </div>
             </ProtectedRoute>
           } />
 

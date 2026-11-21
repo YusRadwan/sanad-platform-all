@@ -1,7 +1,7 @@
+import StudentShell from './StudentShell';
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { useNavigate } from 'react-router';
-import { Award, ArrowRight, Sparkles, BookOpen, CheckCircle2, XCircle, Loader2, Hash } from 'lucide-react';
+import { Award, BookOpen, CheckCircle2, XCircle, Loader2, Hash } from 'lucide-react';
 
 import { studentService } from '../../services/studentService';
 import { formatDateTime } from '../../utils/dateUtils';
@@ -22,7 +22,6 @@ interface ExamAttempt {
 }
 
 export default function StudentCompletedExams() {
-  const navigate = useNavigate();
   const [attempts, setAttempts] = useState<ExamAttempt[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,43 +45,8 @@ export default function StudentCompletedExams() {
   }, []);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="space-y-8 pb-16"
-      dir="rtl"
-    >
-      {/* Navigation Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <button 
-          onClick={() => navigate('/student/statistics')}
-          className="self-start flex items-center gap-2 px-4.5 py-2.5 text-xs md:text-sm font-black text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl shadow-3xs hover:shadow-2xs transition-all cursor-pointer"
-        >
-          <ArrowRight className="w-4 h-4 text-slate-500" />
-          <span>الرجوع للوحة الإحصائيات</span>
-        </button>
-
-        <div className="flex items-center gap-2 bg-indigo-500/10 dark:bg-indigo-500/5 px-4 py-2 rounded-2xl border border-indigo-500/15">
-          <Sparkles className="w-4 h-4 text-indigo-500" />
-          <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">سجل الامتحانات</span>
-        </div>
-      </div>
-
-      {/* Main Title Block */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 border border-slate-200/50 dark:border-slate-800 shadow-3xs relative overflow-hidden group">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-600 to-blue-500" />
-        <div className="relative flex items-center gap-4.5">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-3xs">
-            <Award className="w-7 h-7" />
-          </div>
-          <div>
-            <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white">سجل المحاولات والامتحانات المكتملة</h1>
-            <p className="text-xs md:text-sm font-bold text-slate-400 dark:text-slate-500 mt-1">عرض ومتابعة كافة الامتحانات التي خضتها ونتائج جميع محاولاتك بالتفصيل.</p>
-          </div>
-        </div>
-      </div>
-
+    <StudentShell title="الامتحانات" lead="كل امتحان دخلته ونتيجتك فيه">
+      <div className="space-y-8">
       {/* Exams List */}
       <div className="space-y-4">
         {loading ? (
@@ -166,6 +130,7 @@ export default function StudentCompletedExams() {
           </div>
         )}
       </div>
-    </motion.div>
+      </div>
+    </StudentShell>
   );
 }

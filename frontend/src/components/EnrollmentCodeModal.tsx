@@ -168,7 +168,7 @@ export default function EnrollmentCodeModal({
         <button
           onClick={() => void onRedeem()}
           disabled={submitting || code.length !== 8 || !!success}
-          className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-black text-sm shadow-lg shadow-emerald-500/25 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-emerald-500 text-white font-black text-sm shadow-lg transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {submitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
           <span>تفعيل الاشتراك</span>

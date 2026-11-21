@@ -126,7 +126,18 @@ export function Cover({ course, onOpen }: { course: SiteCourse; onOpen: () => vo
   );
 }
 
-export function SiteCourseCard({ course, onOpen }: { course: SiteCourse; onOpen: () => void }) {
+export function SiteCourseCard({
+  course,
+  onOpen,
+  actionLabel = 'تفاصيل الكورس',
+  owned = false,
+}: {
+  course: SiteCourse;
+  onOpen: () => void;
+  actionLabel?: string;
+  /** The student already has this course: no price, a "مشترك" note instead. */
+  owned?: boolean;
+}) {
   const [imgFailed, setImgFailed] = useState(false);
   const image = course.image || course.thumbnail_url;
   const showImage = hasRealImage(image) && !imgFailed;
@@ -180,9 +191,13 @@ export function SiteCourseCard({ course, onOpen }: { course: SiteCourse; onOpen:
           </p>
         )}
         <div className="mt-auto flex items-center justify-between gap-3 border-t border-[var(--hair)] pt-4">
-          <Price course={course} size="lg" />
-          <button type="button" onClick={onOpen} className="btn-outline h-10 px-4 text-sm">
-            تفاصيل الكورس
+          {owned ? (
+            <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">مشترك</span>
+          ) : (
+            <Price course={course} size="lg" />
+          )}
+          <button type="button" onClick={onOpen} className={`${owned ? 'btn-primary' : 'btn-outline'} h-10 px-4 text-sm`}>
+            {actionLabel}
           </button>
         </div>
       </div>

@@ -1,12 +1,7 @@
+import StudentShell from './StudentShell';
 import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import {
-  KeyRound,
-  Users2,
-  BookOpen,
-  Sparkles,
-  ChevronDown,
-} from 'lucide-react';
+import { KeyRound, Users2, BookOpen, ChevronDown } from 'lucide-react';
 
 import { centerService } from '../../services/centerService';
 import { useCenteredNotification } from '../../context/CenteredNotificationContext';
@@ -103,33 +98,8 @@ export default function CenterStudent() {
   }, [code, loadCenters, notify]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
-    >
-      {/* Header */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 border border-slate-200/50 dark:border-slate-800 shadow-sm relative overflow-hidden group">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-400" />
-        <div className="absolute -left-20 -top-20 w-64 h-64 bg-blue-100/40 dark:bg-blue-900/10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700" />
-
-        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6 z-10">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold text-xs mb-3 border border-blue-100/50 dark:border-blue-800/30">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>منظومة السنتر</span>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white mb-2 flex items-center gap-3">
-              <Users2 className="w-7 h-7 text-blue-600 dark:text-blue-500" />
-              طالب سنتر
-            </h1>
-            <p className="text-sm font-bold text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl">
-              انضم إلى سنتر مدرسك بكود السنتر، واعرض كود QR الخاص بك لتسجيل الحضور، وتابع كورسات السنتر لكل مدرس انضممت إليه.
-            </p>
-          </div>
-        </div>
-      </div>
-
+    <StudentShell title="طالب سنتر" lead="انضم لسنتر مدرسك بالكود، واعرض كود الـ QR بتاعك عشان الحضور، وتابع كورسات السنتر">
+      <div className="space-y-8">
       {/* Join by code */}
       <Card>
         <CardHeader title="انضمام لسنتر جديد" description="أدخل كود السنتر المكوّن من 6 خانات (حرف إنجليزي كبير ثم 5 أرقام)" icon={KeyRound} />
@@ -192,7 +162,7 @@ export default function CenterStudent() {
             // of object everywhere in the app, not a generic list row.
             <div
               key={entry.teacher.id}
-              className="relative overflow-hidden rounded-[28px] shadow-xl shadow-blue-900/20"
+              className="relative overflow-hidden rounded-[28px] shadow-xl"
               style={{
                 background:
                   'radial-gradient(120% 90% at 15% -10%, rgba(224,250,255,0.55) 0%, rgba(224,250,255,0) 42%), ' +
@@ -268,6 +238,7 @@ export default function CenterStudent() {
           <span>بمجرد انضمامك إلى سنتر مدرس، ستظهر كورساته المتاحة للسنتر هنا تلقائياً.</span>
         </div>
       )}
-    </motion.div>
+      </div>
+    </StudentShell>
   );
 }

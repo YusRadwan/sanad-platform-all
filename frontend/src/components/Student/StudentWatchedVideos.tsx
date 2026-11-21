@@ -1,15 +1,7 @@
+import StudentShell from './StudentShell';
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { useNavigate } from 'react-router';
-import {
-  Video,
-  ArrowRight,
-  Sparkles,
-  CheckCircle2,
-  Clock,
-  Loader2,
-  BookOpen,
-} from 'lucide-react';
+import { Video, CheckCircle2, Clock, Loader2, BookOpen } from 'lucide-react';
 
 import { studentService } from '../../services/studentService';
 import { formatDateTime } from '../../utils/dateUtils';
@@ -33,7 +25,6 @@ function formatWatchDuration(seconds: number): string {
 }
 
 export default function StudentWatchedVideos() {
-  const navigate = useNavigate();
   const [videos, setVideos] = useState<WatchedVideo[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,43 +48,8 @@ export default function StudentWatchedVideos() {
   }, []);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="space-y-8 pb-16"
-      dir="rtl"
-    >
-      {/* Navigation Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <button 
-          onClick={() => navigate('/student/statistics')}
-          className="self-start flex items-center gap-2 px-4.5 py-2.5 text-xs md:text-sm font-black text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl shadow-3xs hover:shadow-2xs transition-all cursor-pointer"
-        >
-          <ArrowRight className="w-4 h-4 text-slate-500" />
-          <span>الرجوع للوحة الإحصائيات</span>
-        </button>
-
-        <div className="flex items-center gap-2 bg-blue-500/10 dark:bg-blue-500/5 px-4 py-2 rounded-2xl border border-blue-500/15">
-          <Sparkles className="w-4 h-4 text-blue-500" />
-          <span className="text-xs font-bold text-blue-600 dark:text-blue-400">سجل المشاهدة التفاعلي</span>
-        </div>
-      </div>
-
-      {/* Main Title Block */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 border border-slate-200/50 dark:border-slate-800 shadow-3xs relative overflow-hidden group">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-purple-500 to-indigo-500" />
-        <div className="relative flex items-center gap-4.5">
-          <div className="w-14 h-14 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-3xs">
-            <Video className="w-7 h-7" />
-          </div>
-          <div>
-            <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white">سجل الدروس والمحاضرات المرئية</h1>
-            <p className="text-xs md:text-sm font-bold text-slate-400 dark:text-slate-500 mt-1">متابعة تفصيلية للفيديوهات التي قمت بفتحها ومستوى تقدمك الفعلي في كل كورس.</p>
-          </div>
-        </div>
-      </div>
-
+    <StudentShell title="الفيديوهات" lead="كل فيديو فتحته، وبقالك فيه قد إيه">
+      <div className="space-y-8">
       {/* Videos List */}
       <div className="space-y-5">
         {loading ? (
@@ -151,6 +107,7 @@ export default function StudentWatchedVideos() {
           </div>
         )}
       </div>
-    </motion.div>
+      </div>
+    </StudentShell>
   );
 }

@@ -392,7 +392,7 @@ export default function ExamPage() {
 
             <button
               onClick={handleStartExam}
-              className={`px-10 py-4 rounded-2xl font-black text-white ${maxAttempts !== null && attempts >= maxAttempts ? 'bg-slate-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700 shadow-xl shadow-purple-500/20 hover:shadow-purple-500/30 hover:scale-105 active:scale-95 cursor-pointer'} transition-all text-lg flex items-center gap-2 mx-auto`}
+              className={`px-10 py-4 rounded-2xl font-black text-white ${maxAttempts !== null && attempts >= maxAttempts ? 'bg-slate-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700 shadow-xl   hover:scale-105 active:scale-95 cursor-pointer'} transition-all text-lg flex items-center gap-2 mx-auto`}
               disabled={maxAttempts !== null && attempts >= maxAttempts}
             >
               <Award className="w-5 h-5" />
@@ -508,7 +508,7 @@ export default function ExamPage() {
               {currentQuestion === activeQuestions.length - 1 ? (
                 <button
                   onClick={handleFinishExam}
-                  className="px-8 py-3 rounded-xl font-bold text-white bg-emerald-500 hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2 cursor-pointer"
+                  className="px-8 py-3 rounded-xl font-bold text-white bg-emerald-500 hover:bg-emerald-600 shadow-lg transition-all flex items-center gap-2 cursor-pointer"
                 >
                   <CheckCircle2 className="w-5 h-5" />
                   إنهاء الاختبار
@@ -516,7 +516,7 @@ export default function ExamPage() {
               ) : (
                 <button
                   onClick={() => setCurrentQuestion(Math.min(activeQuestions.length - 1, currentQuestion + 1))}
-                  className="px-8 py-3 rounded-xl font-bold text-white bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-500/20 transition-all flex items-center gap-2 cursor-pointer"
+                  className="px-8 py-3 rounded-xl font-bold text-white bg-purple-600 hover:bg-purple-700 shadow-lg transition-all flex items-center gap-2 cursor-pointer"
                 >
                   التالي
                   <ChevronRight className="w-4 h-4 rotate-180" />
@@ -566,7 +566,7 @@ export default function ExamPage() {
               {showAnswers && (
                 <button
                   onClick={handleViewAnswers}
-                  className="w-full sm:w-auto px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-purple-500/20 cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-2xl transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2"
                 >
                   <Eye className="w-5 h-5" />
                   عرض الإجابات
