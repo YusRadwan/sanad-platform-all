@@ -70,25 +70,25 @@ export default function Footer() {
 
   return (
     <>
-      <footer className="bg-slate-900 border-t border-slate-800 text-slate-300 pt-16 pb-8">
-        <div className="container mx-auto px-6 md:px-12 lg:px-16">
-          <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClass} gap-12 mb-12`}>
+      <footer className="sanad-chrome bg-[var(--paper)] border-t border-[var(--hair)] text-[color:var(--ink)] pt-14 pb-8">
+        <div className="mx-auto w-full max-w-[1200px] px-5 sm:px-8">
+          <div className={`grid grid-cols-1 md:grid-cols-2 ${gridColsClass} gap-10 mb-10`}>
             {/* About Section */}
-            <div className="space-y-6">
-               <div className="flex items-center gap-2">
-                <PlatformLogo className="w-18 h-18 object-contain" />
-                <span className="text-2xl font-black tracking-tight" style={{ color: 'var(--sanad-ink-on-dark)' }}>سند</span>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2.5">
+                <PlatformLogo className="w-10 h-10 object-contain" />
+                <span className="font-kufi text-[28px] font-bold leading-none text-sanad">سند</span>
               </div>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                سندك الحقيقي نحو التفوق والنجاح
+              <p className="m-0 text-[15px] leading-relaxed text-[color:var(--ink-2)] max-w-[36ch]">
+                كورسات مدرسين الإعدادي والثانوي في مكان واحد
               </p>
             </div>
 
             {/* Support Contacts */}
             {isSupportActive && (
               <div>
-                <h4 className="text-white font-bold mb-6 flex items-center gap-2">الدعم والتواصل</h4>
-                <ul className="space-y-4 text-sm text-slate-400">
+                <h4 className="text-[15px] font-medium mb-4 flex items-center gap-2">الدعم والتواصل</h4>
+                <ul className="space-y-3 text-[15px] text-[color:var(--ink-2)]">
                   {activeSupportContacts.map((contact, idx) => {
                     const IconComponent = getSupportIcon(contact.type);
                     const values = contact.values || [contact.value].filter(Boolean);
@@ -96,20 +96,20 @@ export default function Footer() {
 
                     return (
                       <li key={idx} className="flex items-start gap-3">
-                        <IconComponent className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
+                        <IconComponent className="w-[18px] h-[18px] text-[color:var(--ink-3)] shrink-0 mt-1" strokeWidth={1.6} />
                         <div className="flex flex-col gap-1">
                           {values.map((v: string, vIdx: number) => {
                             const isPhone = contact.type.includes('رقم') || contact.type.includes('هاتف');
                             const isMail = contact.type.includes('إيميل') || contact.type.includes('البريد');
                             if (isPhone) {
                               return (
-                                <a key={vIdx} href={`tel:${v}`} className="hover:text-blue-400 transition-colors" dir="ltr">
+                                <a key={vIdx} href={`tel:${v}`} className="link-draw" dir="ltr">
                                   {v}
                                 </a>
                               );
                             } else if (isMail) {
                               return (
-                                <a key={vIdx} href={`mailto:${v}`} className="hover:text-blue-400 transition-colors">
+                                <a key={vIdx} href={`mailto:${v}`} className="link-draw">
                                   {v}
                                 </a>
                               );
@@ -128,7 +128,7 @@ export default function Footer() {
             {/* Social Media */}
             {isSocialActive && (
               <div>
-                <h4 className="text-white font-bold mb-6 flex items-center gap-2">التواصل الاجتماعي</h4>
+                <h4 className="text-[15px] font-medium mb-4 flex items-center gap-2">التواصل الاجتماعي</h4>
                 <div className="flex flex-wrap gap-3">
                   {activeSocialLinks.map((link, idx) => {
                     const IconComponent = getSocialPlatformIcon(link.platform);
@@ -138,9 +138,10 @@ export default function Footer() {
                         href={safeUrl(link.url)} 
                         target="_blank" 
                         rel="noopener noreferrer" 
-                        className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#3544e1] transition-colors"
+                        aria-label={link.platform}
+                        className="w-11 h-11 rounded-[10px] bg-[var(--paper-raised)] flex items-center justify-center text-[color:var(--ink-2)] hover:text-[color:var(--ink)] transition-colors"
                       >
-                        <IconComponent className="w-5 h-5" />
+                        <IconComponent className="w-[18px] h-[18px]" strokeWidth={1.6} aria-hidden="true" />
                       </a>
                     );
                   })}
@@ -151,15 +152,14 @@ export default function Footer() {
             {/* Quick Links */}
             {isQuickLinksActive && (
               <div className="flex flex-col items-start text-right">
-                <h4 className="text-white font-bold mb-6 flex items-center gap-2">روابط هامة</h4>
-                <ul className="space-y-4 w-full flex flex-col items-start">
+                <h4 className="text-[15px] font-medium mb-4 flex items-center gap-2">روابط هامة</h4>
+                <ul className="space-y-3 w-full flex flex-col items-start">
                   {privacySectionEnabled && (
                     <li>
                       <button 
                         onClick={() => setShowPrivacy(true)}
-                        className="text-slate-300 hover:text-white transition-colors text-sm flex items-center gap-2 text-right"
+                        className="link-draw text-[15px] text-[color:var(--ink-2)] text-start cursor-pointer"
                       >
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#3544e1', opacity: 0.5 }}></span>
                         سياسة الخصوصية
                       </button>
                     </li>
@@ -168,9 +168,8 @@ export default function Footer() {
                     <li>
                       <button 
                         onClick={() => setShowTerms(true)}
-                        className="text-slate-300 hover:text-white transition-colors text-sm flex items-center gap-2 text-right"
+                        className="link-draw text-[15px] text-[color:var(--ink-2)] text-start cursor-pointer"
                       >
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#3544e1', opacity: 0.5 }}></span>
                         الشروط والأحكام
                       </button>
                     </li>
@@ -180,13 +179,10 @@ export default function Footer() {
             )}
           </div>
           
-          <div className="w-full h-px bg-slate-800/60" />
+          <div className="w-full h-px bg-[var(--hair)]" />
           
-          <div className="w-full text-center text-slate-400 text-sm flex flex-col md:flex-row justify-between items-center gap-4 pt-8">
-            <p>© {new Date().getFullYear()} منصة سند. جميع الحقوق محفوظة.</p>
-            <div className="flex items-center gap-2">
-              صنع بشغف لتمكين العقول.
-            </div>
+          <div className="w-full text-sm text-[color:var(--ink-3)] pt-6">
+            <p className="m-0">© {new Date().getFullYear()} منصة سند</p>
           </div>
         </div>
       </footer>

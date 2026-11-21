@@ -34,9 +34,8 @@ export default function PublicHomeRoute({ children }: { children: ReactNode }) {
     return <Navigate to="/instructor" replace />;
   }
 
-  // `font-tajawal` (see index.css) scopes the Tajawal typeface to just the
-  // homepage's own sections — the shared Header/Footer chrome and every
-  // other route keep the site's default Cairo.
+  // The homepage's own typeface and tokens are scoped by `.sanad-home`
+  // inside HomePage.tsx.
   //
   // `MotionConfig reducedMotion="user"` makes every `motion/react` animation
   // on the homepage (entrance fades/slides, the teachers/courses carousels,
@@ -45,7 +44,7 @@ export default function PublicHomeRoute({ children }: { children: ReactNode }) {
   // index.css, which cannot reach animations driven by this library.
   return (
     <MotionConfig reducedMotion="user">
-      <div className="font-tajawal">{children}</div>
+      <>{children}</>
     </MotionConfig>
   );
 }

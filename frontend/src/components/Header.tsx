@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router';
 import { Menu, X, ChevronDown, LayoutDashboard, LogOut, TrendingUp, Building2 } from 'lucide-react';
 import PlatformLogo from './PlatformLogo';
 import NotificationDropdown from './NotificationDropdown';
@@ -41,6 +42,13 @@ interface HeaderProps {
   userRole?: string;
   onLogout?: () => void;
 }
+
+const PUBLIC_LINKS = [
+  { to: '/#courses', label: 'الكورسات' },
+  { to: '/#teachers', label: 'المدرسين' },
+  { to: '/#how', label: 'إزاي تشترك' },
+  { to: '/teacher-application', label: 'انضم كمدرس' },
+];
 
 export default function Header({
   currentView,
@@ -108,40 +116,14 @@ export default function Header({
 
   return (
     <header
-      className={`sticky top-0 z-50 mx-2 sm:mx-4 lg:mx-6 rounded-[28px] transition-all duration-500 ease-out ${
-        isScrolled
-          ? 'bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl backdrop-saturate-150 border border-slate-200/70 dark:border-slate-800/70 shadow-[0_1px_2px_0_rgb(15_23_42/0.04),0_18px_40px_-18px_rgba(37,99,235,0.30)] dark:shadow-[0_18px_40px_-18px_rgba(37,99,235,0.22)]'
-          : 'bg-white/55 dark:bg-slate-950/55 backdrop-blur-md border border-slate-200/0 dark:border-slate-800/0 shadow-none'
+      className={`sanad-chrome sticky top-0 z-50 border-b bg-[var(--paper)] transition-[border-color,box-shadow] duration-200 ${
+        isScrolled ? 'border-[var(--hair)] shadow-[0_1px_2px_rgb(29_35_64/0.04)]' : 'border-transparent'
       }`}
     >
-      {/* Ambient light source — a soft blue glow that breathes behind the bar,
-          strongest once it has detached from the top of the page. */}
-      <div
-        className={`absolute -inset-x-10 -top-16 h-24 bg-blue-500/25 dark:bg-blue-500/20 blur-3xl rounded-full pointer-events-none -z-10 transition-opacity duration-700 ${
-          isScrolled ? 'opacity-100' : 'opacity-40'
-        }`}
-      />
-
-      {/* Hairline brand accent along the very top edge, with a light sweep that
-          drifts across it continuously — sharpens once the bar detaches from
-          the top of the document. */}
-      <div
-        className={`absolute inset-x-0 top-0 h-px overflow-hidden pointer-events-none transition-opacity duration-500 ${
-          isScrolled ? 'opacity-70' : 'opacity-25'
-        }`}
-      >
-        <div className="absolute inset-0 bg-gradient-to-l from-transparent via-blue-500 to-transparent" />
-      </div>
-
-      {/* Glassy top highlight — a faint inner sheen along the upper edge,
-          like light grazing the inside of a glass pane. */}
-      <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/25 dark:from-white/[0.06] to-transparent pointer-events-none rounded-t-[28px]" />
-
-      <div
-        className={`container mx-auto px-5 sm:px-8 md:px-12 lg:px-16 flex items-center justify-between gap-2 sm:gap-4 transition-[height] duration-500 ease-out ${
-          isScrolled ? 'h-20' : 'h-24'
-        }`}
-      >
+      {/* Quiet paper bar (the "كراسة سند" redesign): no glow, glass or
+          looping light sweeps — those were removed with the old landing
+          page. A hairline appears once the page scrolls under it. */}
+      <div className="mx-auto w-full max-w-[1200px] px-5 sm:px-8 flex items-center justify-between gap-3 sm:gap-6 h-16 sm:h-[72px]">
 
         {/* Logo and Platform Name */}
         <div
@@ -149,31 +131,24 @@ export default function Header({
           role="button"
           tabIndex={0}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigate('home'); } }}
-          className="flex items-center gap-3 group cursor-pointer rounded-2xl -m-1.5 p-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 select-none"
+          aria-label="سند — الصفحة الرئيسية"
+          className="flex items-center gap-2.5 cursor-pointer rounded-xl -m-1.5 p-1.5 select-none"
         >
-          {/* Bare mark — no background tile, no frame. The light tile that used
-              to sit behind it existed only because the artwork is dark navy and
-              vanished on dark surfaces; PlatformLogo now solves that at the
-              source with a dark-mode `brightness-0 invert` filter that repaints
-              the mark white, so the tile has nothing left to do and the logo
-              sits directly on the bar, matching AdminSystem/InstructorSystem. */}
-          <PlatformLogo className="w-19 h-19 object-contain shrink-0 transition-transform duration-300 group-hover:scale-105 group-active:scale-95" />
-
-          <div className="flex flex-col justify-center leading-none">
-            <span className="text-[1.55rem] font-black tracking-tight font-sans text-sanad">
-              سند
-            </span>
-            <span className="mt-1.5 flex items-center gap-1.5">
-              <span className="h-px w-3 rounded-full bg-gradient-to-l from-transparent to-blue-500/40 group-hover:to-blue-500/80 transition-colors duration-300" />
-              <span className="text-[11px] font-extrabold tracking-[0.25em] text-slate-500 dark:text-slate-400 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors duration-300">
-                SANAD
-              </span>
-            </span>
-          </div>
+          <PlatformLogo className="w-10 h-10 object-contain shrink-0" />
+          <span className="font-kufi text-[28px] font-bold leading-none text-sanad">سند</span>
         </div>
 
-        {/* Navigation - Center */}
-        {/* Navigation links hidden as requested */}
+        {/* Section links — guests and students only (instructors/admins
+            never see the public header). */}
+        {userRole !== 'admin' && (
+          <nav aria-label="أقسام الموقع" className="hidden lg:flex items-center gap-7 text-[15px]">
+            {PUBLIC_LINKS.map((l) => (
+              <Link key={l.to} to={l.to} className="link-draw text-[color:var(--ink)]">
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+        )}
 
         {/* Actions - Left */}
         <div className="flex items-center gap-1.5 sm:gap-2.5">
@@ -345,21 +320,20 @@ export default function Header({
             </div>
           ) : (
             <>
-              {/* Login Button — quiet outline/ghost pill. */}
               <button
+                type="button"
                 onClick={() => onNavigate('login')}
-                className="hidden sm:flex items-center justify-center px-5 py-2.5 rounded-full font-bold text-xs md:text-sm ring-1 ring-inset select-none cursor-pointer ring-slate-900/[0.08] dark:ring-white/10 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-900/[0.03] dark:hover:bg-white/5 transition-colors"
-                style={currentView === 'login' ? { color: 'var(--sanad-ink)', backgroundColor: 'rgba(53,68,225,0.08)' } : undefined}
+                aria-current={currentView === 'login' ? 'page' : undefined}
+                className="hidden sm:inline-flex link-draw text-[15px] font-medium text-[color:var(--ink)] cursor-pointer"
               >
-                تسجيل الدخول
+                دخول
               </button>
-
-              {/* Core Get Started CTA */}
               <button
+                type="button"
                 onClick={() => onNavigate('signup')}
-                className="btn-sanad hidden sm:flex items-center gap-2 px-6 py-2.5 rounded-full font-bold text-xs md:text-sm cursor-pointer"
+                className="btn-primary hidden sm:inline-flex h-10 px-[18px] text-[15px]"
               >
-                <span>إنشاء حساب</span>
+                إنشاء حساب
               </button>
             </>
           )}
@@ -367,11 +341,7 @@ export default function Header({
           {/* Mobile Menu Actuator */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`md:hidden p-2.5 rounded-2xl ring-1 ring-inset transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 ${
-              isMobileMenuOpen
-                ? 'bg-blue-50 dark:bg-blue-950/50 ring-blue-500/30 text-blue-600 dark:text-blue-400'
-                : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 ring-slate-900/[0.08] dark:ring-white/10 text-slate-600 dark:text-slate-300'
-            }`}
+            className="lg:hidden inline-flex h-11 w-11 items-center justify-center rounded-[10px] border border-[var(--hair-strong)] bg-[var(--paper-card)] text-[color:var(--ink)] cursor-pointer transition-colors duration-150 hover:bg-[var(--paper-raised)]"
             aria-label={isMobileMenuOpen ? "إغلاق القائمة" : "فتح القائمة"}
             aria-expanded={isMobileMenuOpen}
           >
@@ -383,11 +353,11 @@ export default function Header({
       {/* Modern Backdrop Mobile Menu — kept mounted and collapsed with a
           grid-rows 0fr/1fr transition so height + fade animate both ways. */}
       <div
-        className={`md:hidden grid overflow-hidden transition-all duration-300 ease-out ${
+        className={`lg:hidden grid overflow-hidden transition-all duration-300 ease-out ${
           isMobileMenuOpen
             ? 'grid-rows-[1fr] opacity-100 border-t border-slate-200/70 dark:border-slate-800/70'
             : 'grid-rows-[0fr] opacity-0 border-t border-transparent pointer-events-none invisible'
-        } bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl shadow-e2`}
+        } bg-[var(--paper)] border-b-[var(--hair)]`}
         aria-hidden={!isMobileMenuOpen}
       >
         <div className="min-h-0">
@@ -396,6 +366,22 @@ export default function Header({
               isMobileMenuOpen ? 'translate-y-0' : '-translate-y-2'
             }`}
           >
+
+            {userRole !== 'admin' && (
+              <ul className="m-0 mb-2 flex list-none flex-col p-0 text-start">
+                {PUBLIC_LINKS.map((l) => (
+                  <li key={l.to}>
+                    <Link
+                      to={l.to}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex h-12 items-center border-b border-[var(--hair)] text-base text-[color:var(--ink)]"
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
 
             {isLoggedIn ? (
               <div className="space-y-2.5">
@@ -472,20 +458,20 @@ export default function Header({
                 </button>
               </div>
             ) : (
-              <div className="space-y-2.5">
+              <div className="flex flex-col gap-2.5">
                 <button
-                  onClick={() => { onNavigate('login'); setIsMobileMenuOpen(false); }}
-                  className="w-full py-3.5 rounded-2xl font-bold text-xs md:text-sm text-slate-700 dark:text-slate-300 bg-white/60 dark:bg-white/[0.03] cursor-pointer ring-1 ring-inset ring-slate-900/[0.08] dark:ring-white/10"
-                >
-                  تسجيل الدخول
-                </button>
-
-                <button
+                  type="button"
                   onClick={() => { onNavigate('signup'); setIsMobileMenuOpen(false); }}
-                  className="w-full text-white py-3.5 rounded-2xl font-black text-xs md:text-sm cursor-pointer"
-                  style={{ backgroundColor: '#3544e1' }}
+                  className="btn-primary h-12 w-full text-base"
                 >
-                  <span>إنشاء حساب جديد</span>
+                  إنشاء حساب
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { onNavigate('login'); setIsMobileMenuOpen(false); }}
+                  className="btn-quiet h-12 w-full text-base"
+                >
+                  دخول
                 </button>
               </div>
             )}

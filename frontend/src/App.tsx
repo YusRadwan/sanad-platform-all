@@ -4,9 +4,7 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router';
 import { Eye, LogOut } from 'lucide-react';
 import LoadingScreen from './components/UI/LoadingScreen';
 import Header from './components/Header';
-import HeroSection from './components/HeroSection';
-import FeaturesSection from './components/FeaturesSection';
-import HowItWorksSection from './components/HowItWorksSection';
+import HomePage from './components/home/HomePage';
 import TeachersSection from './components/TeachersSection';
 import CoursesSection from './components/CoursesSection';
 import Footer from './components/Footer';
@@ -79,7 +77,6 @@ const StudentWatchedVideos = lazy(() => import('./components/Student/StudentWatc
 const StudentCompletedExams = lazy(() => import('./components/Student/StudentCompletedExams'));
 const CenterStudent = lazy(() => import('./components/Student/CenterStudent'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
-import JoinUsSection from './components/JoinUsSection';
 const VideoPlayerPage = lazy(() => import('./components/VideoPlayerPage'));
 const ExamPage = lazy(() => import('./components/ExamPage'));
 const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'));
@@ -259,25 +256,13 @@ export default function App() {
           <Routes>
           <Route path="/" element={
             <PublicHomeRoute>
-              <HeroSection onNavigate={navigateTo as any} isLoggedIn={isLoggedIn} />
-              <HowItWorksSection />
-              <TeachersSection
-                teachersList={teachersList.filter((t) => t.isActive !== false)}
-                onViewProfile={handleViewTeacherProfile}
-                isPreview={true}
-              />
-              <FeaturesSection />
-              <CoursesSection
-                courses={coursesList}
+              <HomePage
+                teachers={teachersList}
                 isLoggedIn={isLoggedIn}
-                onNavigate={navigateTo as any}
                 onViewCourse={handleViewCourseDetails}
-                hasMore={coursesPagination.hasMore}
-                isLoading={coursesPagination.isLoading}
-                onLoadMore={handleLoadMoreCourses}
-                isPreview={true}
+                onViewProfile={handleViewTeacherProfile}
+                onNavigate={navigateTo as any}
               />
-              <JoinUsSection onNavigate={navigateTo as any} />
             </PublicHomeRoute>
           } />
           

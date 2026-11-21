@@ -1,0 +1,142 @@
+name: Seed Starter Teachers and Courses (production)
+
+# Adds the starter catalogue (5 teachers, 11 published courses) defined in
+# backend/database/seeders/DemoCatalogSeeder.php to the live database, so the
+# redesigned homepage opens on a full catalogue. The owner edits or deletes
+# these records from the admin panel afterwards.
+#
+# Production's backend code is deployed from another branch, so this job does
+# NOT redeploy the backend: it copies only the one seeder file to the server,
+# backs the database up, runs that seeder, then removes the file again.
+# The seeder is idempotent (existing usernames / course titles are skipped).
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_seed:
+        description: "Add the starter teachers and courses to the production database"
+        required: true
+        type: choice
+        options:
+          - "no"
+          - "yes"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sanad-production-database-migration
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    if: inputs.confirm_seed == 'yes'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check seeder syntax
+        run: php -l backend/database/seeders/DemoCatalogSeeder.php
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY_B64: ${{ secrets.HOSTINGER_SSH_PRIVATE_KEY_B64 }}
+          SSH_KNOWN_HOSTS: ${{ secrets.HOSTINGER_SSH_KNOWN_HOSTS }}
+        run: |
+          set -e
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          if printf '%s' "$SSH_PRIVATE_KEY_B64" | grep -q -- '-----BEGIN .*PRIVATE KEY-----'; then
+            printf '%s\n' "$SSH_PRIVATE_KEY_B64" | tr -d '\r' > ~/.ssh/deploy_key
+          else
+            NORMALIZED_KEY=$(printf '%s' "$SSH_PRIVATE_KEY_B64" | tr -d '[:space:]')
+            printf '%s' "$NORMALIZED_KEY" | base64 --decode > ~/.ssh/deploy_key
+          fi
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          ssh-keygen -y -f ~/.ssh/deploy_key >/dev/null
+
+      - name: Back up the database and run the seeder
+        env:
+          SSH_HOST: ${{ secrets.HOSTINGER_SSH_HOST }}
+          SSH_PORT: ${{ secrets.HOSTINGER_SSH_PORT }}
+          SSH_USER: ${{ secrets.HOSTINGER_SSH_USER }}
+        run: |
+          set -e
+          case "$SSH_HOST" in *[!A-Za-z0-9.-]*) echo "Invalid SSH host"; exit 2;; esac
+          case "$SSH_PORT" in *[!0-9]*) echo "Invalid SSH port"; exit 2;; esac
+
+          SEEDER_B64=$(base64 -w0 backend/database/seeders/DemoCatalogSeeder.php)
+
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \
+            -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" "SEEDER_B64='$SEEDER_B64' bash -s" <<'REMOTE'
+          set -Eeuo pipefail
+          BACKEND="$HOME/sanad-platform-all/backend"
+          BACKUP_DIR="$HOME/sanad-backups"
+          SEEDER="$BACKEND/database/seeders/DemoCatalogSeeder.php"
+          PHP_BIN="$(command -v php)"
+          DUMP_BIN="$(command -v mysqldump || command -v mariadb-dump || true)"
+          MYSQL_BIN="$(command -v mysql || command -v mariadb || true)"
+
+          test -f "$BACKEND/artisan"
+          test -f "$BACKEND/.env"
+          test -f "$BACKEND/vendor/autoload.php"
+          test -f "$BACKEND/app/Actions/Teacher/CreateTeacher.php"
+          test -n "$DUMP_BIN" || { echo "mysqldump unavailable; refusing to seed"; exit 10; }
+          test -n "$MYSQL_BIN" || { echo "mysql client unavailable; refusing to seed"; exit 11; }
+
+          read_env() {
+            "$PHP_BIN" -r '
+            require $argv[1] . "/vendor/autoload.php";
+            $env = Dotenv\Dotenv::parse(file_get_contents($argv[2]));
+            $key = $argv[3];
+            if ($key === "DB_PORT" && !array_key_exists($key, $env)) { echo "3306"; exit(0); }
+            if (!array_key_exists($key, $env)) { fwrite(STDERR, "Missing database setting: $key\n"); exit(20); }
+            echo $env[$key];
+            ' "$BACKEND" "$BACKEND/.env" "$1"
+          }
+
+          DB_HOST="$(read_env DB_HOST)"
+          DB_PORT="$(read_env DB_PORT)"
+          DB_NAME="$(read_env DB_DATABASE)"
+          DB_USERNAME="$(read_env DB_USERNAME)"
+          DB_PASSWORD="$(read_env DB_PASSWORD)"
+
+          count() {
+            MYSQL_PWD="$DB_PASSWORD" "$MYSQL_BIN" --host="$DB_HOST" --port="$DB_PORT" \
+              --user="$DB_USERNAME" --batch --skip-column-names "$DB_NAME" -e "$1"
+          }
+
+          echo "=== BEFORE ==="
+          echo "teachers: $(count 'SELECT COUNT(*) FROM teachers')"
+          echo "published courses: $(count 'SELECT COUNT(*) FROM courses WHERE is_published = 1 AND deleted_at IS NULL')"
+
+          echo "=== DATABASE BACKUP ==="
+          mkdir -p "$BACKUP_DIR"
+          chmod 700 "$BACKUP_DIR"
+          umask 077
+          BACKUP="$BACKUP_DIR/database-before-demo-catalog-$(date +%Y%m%d-%H%M%S).sql.gz"
+          MYSQL_PWD="$DB_PASSWORD" "$DUMP_BIN" \
+            --host="$DB_HOST" --port="$DB_PORT" --user="$DB_USERNAME" \
+            --single-transaction --routines --triggers --events --databases "$DB_NAME" \
+            | gzip -c > "$BACKUP"
+          gzip -t "$BACKUP"
+          test -s "$BACKUP"
+          chmod 600 "$BACKUP"
+          echo "DATABASE_BACKUP=$BACKUP"
+
+          echo "=== RUN SEEDER ==="
+          printf '%s' "$SEEDER_B64" | base64 --decode > "$SEEDER"
+          trap 'rm -f "$SEEDER"' EXIT
+          "$PHP_BIN" -l "$SEEDER"
+          cd "$BACKEND"
+          "$PHP_BIN" artisan db:seed --class='Database\Seeders\DemoCatalogSeeder' --force --no-interaction
+
+          echo "=== AFTER ==="
+          echo "teachers: $(count 'SELECT COUNT(*) FROM teachers')"
+          echo "published courses: $(count 'SELECT COUNT(*) FROM courses WHERE is_published = 1 AND deleted_at IS NULL')"
+          echo "DEMO_CATALOG_SEEDED"
+          REMOTE

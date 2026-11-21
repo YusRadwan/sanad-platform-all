@@ -29,9 +29,8 @@
  * ========================================================================= */
 @theme {
   --font-sans: "Cairo", "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  /* Homepage-only font (see `.font-tajawal` below / PublicHomeRoute.tsx) —
-     the rest of the app (Instructor/Admin dashboards, auth pages) keeps
-     Cairo untouched. */
+  /* Tajawal: the admin dashboard only (AdminSystem.tsx). The public site
+     uses Readex Pro + Reem Kufi (see "SANAD PUBLIC SITE" below). */
   --font-tajawal: "Tajawal", "Cairo", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --animate-shimmer: shimmer 2.5s infinite;
 
@@ -126,6 +125,7 @@ body {
   --font-tajawal: "Tajawal", "Cairo", ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
+/* Admin dashboard (AdminSystem.tsx) still uses Tajawal. */
 .font-tajawal,
 .font-tajawal * {
   font-family: var(--font-tajawal);
@@ -152,6 +152,7 @@ body {
 .bg-sanad-steel { background-color: var(--sanad-steel); }
 .border-sanad { border-color: var(--sanad-ink); }
 
+@layer components {
 /* Public-site buttons: one hover/press/focus language instead of bare
    buttons with no state feedback at all. */
 .btn-sanad,
@@ -172,12 +173,14 @@ body {
 .btn-sanad-outline:active,
 .btn-sanad-light:active { transform: scale(0.97); }
 
+}
+
 /* Keyboard focus — the public pages had no visible focus indicator on most
    controls (only Tailwind's default outline, often suppressed). A single
    two-tone ring that reads on white, on the brand-blue panels and in dark
    mode alike. */
-.font-tajawal :focus-visible,
-footer :focus-visible {
+.sanad-home :focus-visible,
+.sanad-chrome :focus-visible {
   outline: 3px solid #fff;
   outline-offset: 2px;
   box-shadow: 0 0 0 6px var(--sanad-ink);
@@ -243,3 +246,100 @@ p, li { text-wrap: pretty; }
   background-color: rgba(255, 255, 255, 0.45);
 }
 
+
+/* ===========================================================================
+ * SANAD PUBLIC SITE — "كراسة سند" (approved redesign, Nov 2026)
+ * ---------------------------------------------------------------------------
+ * World: a tidy study notebook. Paper ground, ink-blue text, Sanad blue for
+ * the one primary action, a yellow highlighter as the single signature mark.
+ * Scoped to `.sanad-home` (homepage sections) and `.sanad-chrome` (public
+ * header/footer) so the dashboards keep their own Cairo/slate system.
+ * Contrast (on paper #F7F5F0): ink 14.1, secondary 5.8, muted 4.7, blue 6.3.
+ * ------------------------------------------------------------------------ */
+:root {
+  --paper: #F7F5F0;
+  --paper-card: #FFFFFF;
+  --paper-raised: #EFECE4;
+  --ink: #1D2340;
+  --ink-2: #5A5F73;
+  --ink-3: #686D80;
+  --hair: rgb(29 35 64 / 0.08);
+  --hair-strong: rgb(29 35 64 / 0.14);
+  --marker: #FFD84D;
+  --font-readex: "Readex Pro", "Cairo", ui-sans-serif, system-ui, sans-serif;
+  --font-kufi: "Reem Kufi", "Readex Pro", "Cairo", ui-sans-serif, sans-serif;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+.dark {
+  --paper: #12142A;
+  --paper-card: #191C36;
+  --paper-raised: #232745;
+  --ink: #E8E6F0;
+  --ink-2: #B4B6C6;
+  --ink-3: #9A9DB0;
+  --hair: rgb(232 230 240 / 0.1);
+  --hair-strong: rgb(232 230 240 / 0.18);
+}
+
+.sanad-home,
+.sanad-chrome {
+  font-family: var(--font-readex);
+  color: var(--ink);
+  letter-spacing: 0;
+}
+.sanad-home { background: var(--paper); line-height: 1.7; }
+.font-kufi { font-family: var(--font-kufi); }
+.font-readex { font-family: var(--font-readex); }
+
+/* The signature: a highlighter stroke under the one word that matters. A
+   hard-stop single-colour band, not a hue gradient. */
+.marker {
+  background-image: linear-gradient(transparent 58%, var(--marker) 58%, var(--marker) 92%, transparent 92%);
+  padding-inline: 0.15em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.dark .marker { color: var(--ink); background-image: linear-gradient(transparent 58%, rgb(255 216 77 / 0.35) 58%, rgb(255 216 77 / 0.35) 92%, transparent 92%); }
+
+/* Ruled notebook lines on the subject covers. */
+.ruled {
+  background-image: repeating-linear-gradient(to bottom, transparent 0 25px, rgb(255 255 255 / 0.09) 25px 26px);
+}
+
+@layer components {
+/* One button system for the public site. */
+.btn-primary, .btn-quiet, .btn-outline, .btn-on-ink {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  border-radius: 10px; font-weight: 500; text-decoration: none; cursor: pointer;
+  transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out),
+    border-color 160ms var(--ease-out), transform 120ms var(--ease-out);
+}
+.btn-primary { background: var(--sanad-ink); color: #fff; }
+.btn-primary:hover { background: var(--sanad-ink-hover); }
+.dark .btn-primary { background: var(--sanad-ink-on-dark); color: #12142A; }
+.dark .btn-primary:hover { background: #a8afff; }
+.btn-quiet { background: var(--paper-raised); color: var(--ink); }
+.btn-quiet:hover { background: color-mix(in srgb, var(--paper-raised) 80%, var(--ink) 8%); }
+.btn-outline { border: 1px solid rgb(53 68 225 / 0.35); color: var(--sanad-ink); background: transparent; }
+.btn-outline:hover { background: rgb(53 68 225 / 0.06); border-color: rgb(53 68 225 / 0.6); }
+.dark .btn-outline { color: var(--sanad-ink-on-dark); border-color: rgb(143 152 255 / 0.4); }
+.btn-on-ink { background: #fff; color: #1D2340; }
+.btn-on-ink:hover { background: #ECEBF5; }
+.btn-primary:active, .btn-quiet:active, .btn-outline:active, .btn-on-ink:active { transform: scale(0.98); }
+
+/* Links: underline draws in on hover. */
+.link-draw { text-decoration: none; background: linear-gradient(currentColor, currentColor) 100% 100% / 0 1px no-repeat; transition: background-size 220ms var(--ease-out); }
+.link-draw:hover { background-size: 100% 1px; }
+
+/* Cards lift 2px on hover; nothing tilts. */
+.lift { transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out); }
+.lift:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgb(29 35 64 / 0.06), 0 14px 28px -16px rgb(29 35 64 / 0.3); }
+
+}
+
+/* Hero enters once on load: a short fade-and-rise with a small stagger. */
+@keyframes sanad-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.enter { animation: sanad-enter 520ms var(--ease-out) both; }
+.enter-2 { animation-delay: 80ms; }
+.enter-3 { animation-delay: 160ms; }
+.enter-4 { animation-delay: 240ms; }
