@@ -40,7 +40,7 @@ export default function PlatformLogo({ className = "w-11 h-11 object-contain" }:
   return (
     <img
       src={STATIC_LOGO}
-      alt="Platform Logo"
+      alt="شعار منصة سند"
       className={className}
       referrerPolicy="no-referrer"
       onError={() => setFailed(true)}

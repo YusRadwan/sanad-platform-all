@@ -77,9 +77,9 @@ export default function Footer() {
             <div className="space-y-6">
                <div className="flex items-center gap-2">
                 <PlatformLogo className="w-18 h-18 object-contain" />
-                <span className="text-2xl font-black tracking-tight" style={{ color: '#3544e1' }}>سند</span>
+                <span className="text-2xl font-black tracking-tight" style={{ color: 'var(--sanad-ink-on-dark)' }}>سند</span>
               </div>
-              <p className="text-slate-400 text-sm leading-relaxed">
+              <p className="text-slate-300 text-sm leading-relaxed">
                 سندك الحقيقي نحو التفوق والنجاح
               </p>
             </div>
@@ -157,7 +157,7 @@ export default function Footer() {
                     <li>
                       <button 
                         onClick={() => setShowPrivacy(true)}
-                        className="text-slate-400 hover:text-[#3544e1] transition-colors text-sm flex items-center gap-2 text-right"
+                        className="text-slate-300 hover:text-white transition-colors text-sm flex items-center gap-2 text-right"
                       >
                         <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#3544e1', opacity: 0.5 }}></span>
                         سياسة الخصوصية
@@ -168,7 +168,7 @@ export default function Footer() {
                     <li>
                       <button 
                         onClick={() => setShowTerms(true)}
-                        className="text-slate-400 hover:text-[#3544e1] transition-colors text-sm flex items-center gap-2 text-right"
+                        className="text-slate-300 hover:text-white transition-colors text-sm flex items-center gap-2 text-right"
                       >
                         <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#3544e1', opacity: 0.5 }}></span>
                         الشروط والأحكام
@@ -182,7 +182,7 @@ export default function Footer() {
           
           <div className="w-full h-px bg-slate-800/60" />
           
-          <div className="w-full text-center text-slate-500 text-sm flex flex-col md:flex-row justify-between items-center gap-4 pt-8">
+          <div className="w-full text-center text-slate-400 text-sm flex flex-col md:flex-row justify-between items-center gap-4 pt-8">
             <p>© {new Date().getFullYear()} منصة سند. جميع الحقوق محفوظة.</p>
             <div className="flex items-center gap-2">
               صنع بشغف لتمكين العقول.

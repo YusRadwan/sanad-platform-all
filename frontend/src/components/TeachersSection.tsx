@@ -1,9 +1,10 @@
 import { Link } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
-import { GraduationCap } from 'lucide-react';
+import { GraduationCap, ArrowLeft } from 'lucide-react';
 import TeacherCard from './TeacherCard';
 import TeachersCarousel from './TeachersCarousel';
 import SectionDivider from './SectionDivider';
+import SectionHeading from './SectionHeading';
 import { TeachersSectionProps } from '../types/index';
 
 /**
@@ -28,36 +29,17 @@ export default function TeachersSection({ teachersList, onViewProfile, isPreview
   const displayedTeachers = allTeachers;
 
   return (
-    <section id="teachers" className="pt-24 transition-colors duration-300">
+    <section id="teachers" aria-labelledby="teachers-title" className="pt-24 transition-colors duration-300">
       <div className="container mx-auto px-6 md:px-12 lg:px-16">
 
         {/* Section Header — plain page background; the fill colour only
             starts below this, in the full-bleed panel wrapping the cards. */}
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="flex items-center gap-3 justify-center mb-3"
-          >
-            <span className="h-[3px] w-9 rounded-full bg-gradient-to-l from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 shrink-0" />
-            <span className="text-base font-black tracking-wide text-blue-700 dark:text-blue-400">خُبراء يقودون رحلتك التعليمية</span>
-            <span className="h-[3px] w-9 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 shrink-0" />
-          </motion.div>
-          <motion.h2
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white mb-5 tracking-tight flex items-center justify-center gap-4"
-          >
-            <span>اختر</span>
-            <span className="text-6xl md:text-8xl pb-2 md:pb-4 leading-none inline-block" style={{ color: '#3544e1' }}>
-              سندك
-            </span>
-          </motion.h2>
-          <div className="w-16 h-1 bg-blue-600 mx-auto mt-6 rounded-full" />
-        </div>
+        <SectionHeading
+          id="teachers-title"
+          before="اختر"
+          highlight="سندك"
+          lead="خُبراء يقودون رحلتك التعليمية"
+        />
       </div>
 
       {/* Full-bleed panel — the background colour starts HERE, below the
@@ -66,20 +48,20 @@ export default function TeachersSection({ teachersList, onViewProfile, isPreview
           against the panel's own full-viewport width) so cards can reach
           the true left/right edges instead of stopping at the container's
           side padding, which used to read as a dead margin framing them. */}
-      <div className="relative left-1/2 -translate-x-1/2 w-screen py-16 md:py-24" style={{ backgroundColor: '#2971b6' }}>
-        <SectionDivider variant="bumps" position="top" />
-        <SectionDivider variant="bumps" position="bottom" />
+      <div className="bg-sanad-steel relative left-1/2 -translate-x-1/2 w-screen py-16 md:py-24">
+        <SectionDivider variant="wave" position="top" />
+        <SectionDivider variant="wave" position="bottom" />
 
         {isPreview ? (
           displayedTeachers.length === 0 ? (
             <div className="container mx-auto px-6 md:px-12 lg:px-16">
               <div className="text-center py-20 space-y-4" dir="rtl">
-                <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center mx-auto text-slate-400 dark:text-slate-600">
-                  <GraduationCap className="w-8 h-8" />
+                <div className="flex justify-center text-white/80">
+                  <GraduationCap className="w-10 h-10" aria-hidden="true" />
                 </div>
                 <div className="space-y-1.5">
-                  <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">لا يوجد معلمون متاحون حالياً</h3>
-                  <p className="text-xs font-bold text-slate-400 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+                  <h3 className="text-lg font-black text-white">لا يوجد معلمون متاحون حالياً</h3>
+                  <p className="text-sm font-medium text-white max-w-sm mx-auto leading-relaxed">
                     لم يتم تفعيل أي حساب معلم على المنصة حتى الآن من لوحة التحكم.
                   </p>
                 </div>
@@ -128,12 +110,12 @@ export default function TeachersSection({ teachersList, onViewProfile, isPreview
                   className="col-span-full text-center py-20 space-y-4"
                   dir="rtl"
                 >
-                  <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center mx-auto text-slate-400 dark:text-slate-600">
-                    <GraduationCap className="w-8 h-8" />
+                  <div className="flex justify-center text-white/80">
+                    <GraduationCap className="w-10 h-10" aria-hidden="true" />
                   </div>
                   <div className="space-y-1.5">
-                    <h3 className="text-lg font-black text-slate-800 dark:text-slate-200">لا يوجد معلمون متاحون حالياً</h3>
-                    <p className="text-xs font-bold text-slate-400 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+                    <h3 className="text-lg font-black text-white">لا يوجد معلمون متاحون حالياً</h3>
+                    <p className="text-sm font-medium text-white max-w-sm mx-auto leading-relaxed">
                       لم يتم تفعيل أي حساب معلم على المنصة حتى الآن من لوحة التحكم.
                     </p>
                   </div>
@@ -148,10 +130,10 @@ export default function TeachersSection({ teachersList, onViewProfile, isPreview
             <div className="flex justify-center mt-16">
               <Link
                 to="/teachers"
-                className="inline-flex items-center px-10 py-4 rounded-full text-white font-black text-base"
-                style={{ backgroundColor: '#3544e1' }}
+                className="btn-sanad-light inline-flex items-center gap-2 min-h-12 px-10 py-4 rounded-full font-black text-base"
               >
-                عرض المزيد
+                كل المدرسين
+                <ArrowLeft className="w-5 h-5" aria-hidden="true" />
               </Link>
             </div>
           </div>

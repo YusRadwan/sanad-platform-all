@@ -1,7 +1,7 @@
 import { memo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'motion/react';
-import { Sparkles, CheckCircle2, Tag, Loader2, CalendarDays, Clock } from 'lucide-react';
+import { Sparkles, CheckCircle2, Tag, Loader2, CalendarDays, Clock, BookOpen } from 'lucide-react';
 import { CourseCardProps } from '../types/index';
 import { authService } from '../services/authService';
 import { courseService } from '../services/courseService';
@@ -64,6 +64,9 @@ function CourseCard({ course, isLoggedIn, onViewCourse, index = 1 }: CourseCardP
 
   // Navigates immediately. There used to be a 1.2s "جاري الانتقال..." banner
   // here that did nothing but delay the click; it is gone.
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = Boolean(course.image) && course.image !== COURSE_IMAGE_PLACEHOLDER && !imageFailed;
+
   const handleViewCourse = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onViewCourse) {
@@ -97,10 +100,10 @@ function CourseCard({ course, isLoggedIn, onViewCourse, index = 1 }: CourseCardP
       return (
         <button
           onClick={handleSubscribe}
-          title="سجّل للاشتراك"
+          title="سجّل دخولك للاشتراك في الكورس"
           className={`${actionButtonBase} bg-white text-slate-700 hover:bg-indigo-600 hover:text-white transition-all duration-300 transform hover:-translate-y-0.5 active:scale-98 cursor-pointer shadow-sm hover:shadow-indigo-500/10`}
         >
-          <span>سجّل للاشتراك</span>
+          <span>سجّل دخولك واشترك</span>
         </button>
       );
     }
@@ -138,8 +141,7 @@ function CourseCard({ course, isLoggedIn, onViewCourse, index = 1 }: CourseCardP
       <button
         onClick={handleSubscribe}
         title="اشترك الآن في الكورس"
-        className={`${actionButtonBase} text-white cursor-pointer`}
-        style={{ backgroundColor: '#3544e1' }}
+        className={`${actionButtonBase} btn-sanad cursor-pointer`}
       >
         <span>اشترك الآن</span>
       </button>
@@ -184,22 +186,42 @@ function CourseCard({ course, isLoggedIn, onViewCourse, index = 1 }: CourseCardP
           that exact 50/50 split is what makes it a "floating" thumbnail
           instead of a thumbnail that merely peeks out unevenly. */}
       <div className="relative w-[92%] mx-auto h-48 md:h-56 -mt-24 md:-mt-28 -mb-24 md:-mb-28 z-20 rounded-2xl overflow-hidden border-[3px] border-white dark:border-slate-900 shadow-xl transition-all duration-500 group-hover:shadow-2xl group-hover:shadow-indigo-500/30 group-hover:-translate-y-1.5">
-        <img
-          src={course.image}
-          alt={course.title}
-          className="w-full h-full object-cover transform group-hover:scale-110 group-hover:rotate-1 transition-all duration-700 ease-in-out"
-          referrerPolicy="no-referrer"
-          // course.image already defaults to COURSE_IMAGE_PLACEHOLDER when
-          // empty (courseService.ts) — this catches the OTHER failure mode:
-          // a real URL that 404s because the uploaded file no longer exists
-          // on the server. `onerror = null` stops a loop if the placeholder
-          // data: URI itself ever failed (it can't, but belt and braces).
-          onError={(e) => {
-            e.currentTarget.onerror = null;
-            e.currentTarget.src = COURSE_IMAGE_PLACEHOLDER;
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent pointer-events-none" />
+        {showImage ? (
+          <img
+            src={course.image}
+            alt={course.title}
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover transform group-hover:scale-110 group-hover:rotate-1 transition-all duration-700 ease-in-out"
+            referrerPolicy="no-referrer"
+            // A real URL that 404s (uploaded file removed from the server)
+            // falls back to the branded cover below instead of a broken icon.
+            onError={() => setImageFailed(true)}
+          />
+        ) : (
+          // Branded cover for courses with no uploaded thumbnail. The old
+          // fallback was a grey dashed "لا توجد صورة للكورس / لم يتم رفع صورة
+          // بعد" admin placeholder, which on the PUBLIC catalogue read as a
+          // broken, unfinished site. This is still honest (no stock photo
+          // pretending to be the course) — just the course's own subject and
+          // grade set as a cover.
+          <div
+            role="img"
+            aria-label={course.title}
+            className="w-full h-full flex flex-col items-center justify-center gap-2 px-6 text-center bg-[radial-gradient(120%_90%_at_80%_0%,#5b67f0_0%,#3544e1_45%,#1e2a9e_100%)]"
+          >
+            <BookOpen className="w-10 h-10 text-white/70" aria-hidden="true" />
+            <span className="text-2xl md:text-3xl font-black text-white leading-tight line-clamp-2">
+              {course.subject || course.title}
+            </span>
+            {course.grade && (
+              <span className="text-sm font-bold text-white/80">{course.grade}</span>
+            )}
+          </div>
+        )}
+        {showImage && (
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent pointer-events-none" />
+        )}
         {/* Colour wash that blooms in on hover, matching the halo/ring hue */}
         <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/20 transition-all duration-500 pointer-events-none" />
 
@@ -209,7 +231,7 @@ function CourseCard({ course, isLoggedIn, onViewCourse, index = 1 }: CourseCardP
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: [1, 1.06, 1], opacity: 1 }}
             transition={{ opacity: { delay: 0.2 }, scale: { delay: 0.6, duration: 1.8, repeat: Infinity, ease: 'easeInOut' } }}
-            className="absolute top-1.5 right-1.5 z-20 bg-rose-600 text-white font-black text-[10px] px-2 py-1 rounded-lg flex items-center gap-1 shadow-lg shadow-rose-900/30 ring-1 ring-white/25"
+            className="absolute top-1.5 right-1.5 z-20 bg-rose-600 text-white font-black text-xs px-2 py-1 rounded-lg flex items-center gap-1 shadow-lg shadow-rose-900/30 ring-1 ring-white/25"
           >
             <Sparkles className="w-2.5 h-2.5 text-rose-100" />
             <span>خصم {discountPercentage}%</span>
@@ -304,7 +326,7 @@ function CourseCard({ course, isLoggedIn, onViewCourse, index = 1 }: CourseCardP
 
               {/* Description — right below the title, explicitly right-aligned. */}
               {course.description && (
-                <p className="w-full text-right text-blue-100/80 text-[11px] leading-relaxed line-clamp-2 font-medium mb-1.5 px-1">
+                <p className="w-full text-right text-blue-100/90 text-xs leading-relaxed line-clamp-2 font-medium mb-1.5 px-1">
                   {course.description}
                 </p>
               )}
@@ -314,7 +336,7 @@ function CourseCard({ course, isLoggedIn, onViewCourse, index = 1 }: CourseCardP
                   space and pushes price to the true edge even when empty),
                   price as a compact gradient pill pinned to the LEFT. */}
               <div className="w-full flex items-center gap-2 mt-1">
-                <div className="flex-1 min-w-0 flex flex-col items-start gap-0.5 text-[10px] leading-4 font-semibold text-blue-200/80">
+                <div className="flex-1 min-w-0 flex flex-col items-start gap-0.5 text-xs leading-4 font-semibold text-blue-100/90">
                   {course.created_at && (
                     <span className="inline-flex items-center gap-1 whitespace-nowrap">
                       <CalendarDays className="w-2.5 h-2.5 shrink-0 opacity-70" strokeWidth={2.5} />
@@ -375,8 +397,7 @@ function CourseCard({ course, isLoggedIn, onViewCourse, index = 1 }: CourseCardP
               <button
                 onClick={handleViewCourse}
                 title="عرض تفاصيل الكورس"
-                className={`${actionButtonBase} text-white cursor-pointer`}
-                style={{ backgroundColor: '#3544e1' }}
+                className={`${actionButtonBase} btn-sanad cursor-pointer`}
               >
                 <span>عرض التفاصيل</span>
               </button>

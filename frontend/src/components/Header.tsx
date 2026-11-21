@@ -118,7 +118,7 @@ export default function Header({
           strongest once it has detached from the top of the page. */}
       <div
         className={`absolute -inset-x-10 -top-16 h-24 bg-blue-500/25 dark:bg-blue-500/20 blur-3xl rounded-full pointer-events-none -z-10 transition-opacity duration-700 ${
-          isScrolled ? 'opacity-100 animate-pulse' : 'opacity-40'
+          isScrolled ? 'opacity-100' : 'opacity-40'
         }`}
       />
 
@@ -131,18 +131,7 @@ export default function Header({
         }`}
       >
         <div className="absolute inset-0 bg-gradient-to-l from-transparent via-blue-500 to-transparent" />
-        <div className="absolute inset-y-0 w-1/3 bg-gradient-to-l from-transparent via-white/80 to-transparent -translate-x-full animate-shimmer [animation-duration:3.5s]" />
       </div>
-
-      {/* Glass light sweep — a soft diagonal highlight that glides across the
-          whole bar, like light catching a pane of glass. Only runs once the
-          bar has detached from the top of the page (i.e. while scrolled),
-          reinforcing the frosted-glass read of the blurred background. */}
-      {isScrolled && (
-        <div className="absolute inset-0 rounded-[28px] overflow-hidden pointer-events-none">
-          <div className="absolute -inset-y-4 -left-1/3 w-1/3 rotate-12 bg-gradient-to-l from-transparent via-white/35 dark:via-white/15 to-transparent -translate-x-full animate-shimmer [animation-duration:4.5s]" />
-        </div>
-      )}
 
       {/* Glassy top highlight — a faint inner sheen along the upper edge,
           like light grazing the inside of a glass pane. */}
@@ -171,12 +160,12 @@ export default function Header({
           <PlatformLogo className="w-19 h-19 object-contain shrink-0 transition-transform duration-300 group-hover:scale-105 group-active:scale-95" />
 
           <div className="flex flex-col justify-center leading-none">
-            <span className="text-[1.55rem] font-black tracking-tight font-sans" style={{ color: '#3544e1' }}>
+            <span className="text-[1.55rem] font-black tracking-tight font-sans text-sanad">
               سند
             </span>
             <span className="mt-1.5 flex items-center gap-1.5">
               <span className="h-px w-3 rounded-full bg-gradient-to-l from-transparent to-blue-500/40 group-hover:to-blue-500/80 transition-colors duration-300" />
-              <span className="text-[9px] font-extrabold tracking-[0.3em] text-slate-400 dark:text-slate-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors duration-300">
+              <span className="text-[11px] font-extrabold tracking-[0.25em] text-slate-500 dark:text-slate-400 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors duration-300">
                 SANAD
               </span>
             </span>
@@ -216,7 +205,7 @@ export default function Header({
                     ? 'bg-white dark:bg-slate-800 ring-blue-500/40 shadow-md shadow-blue-600/10'
                     : 'bg-slate-100/90 hover:bg-white dark:bg-slate-900/90 dark:hover:bg-slate-800 ring-slate-900/[0.06] dark:ring-white/10 hover:ring-blue-500/25 hover:shadow-sm'
                 }`}
-                aria-label="User Dropdown"
+                aria-label="قائمة الحساب"
                 aria-expanded={isDropdownOpen}
                 aria-haspopup="menu"
               >
@@ -359,8 +348,8 @@ export default function Header({
               {/* Login Button — quiet outline/ghost pill. */}
               <button
                 onClick={() => onNavigate('login')}
-                className="hidden sm:flex items-center justify-center px-5 py-2.5 rounded-full font-bold text-xs md:text-sm ring-1 ring-inset select-none cursor-pointer ring-slate-900/[0.08] dark:ring-white/10"
-                style={currentView === 'login' ? { color: '#3544e1', backgroundColor: 'rgba(53,68,225,0.08)' } : { color: '#64748b' }}
+                className="hidden sm:flex items-center justify-center px-5 py-2.5 rounded-full font-bold text-xs md:text-sm ring-1 ring-inset select-none cursor-pointer ring-slate-900/[0.08] dark:ring-white/10 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-900/[0.03] dark:hover:bg-white/5 transition-colors"
+                style={currentView === 'login' ? { color: 'var(--sanad-ink)', backgroundColor: 'rgba(53,68,225,0.08)' } : undefined}
               >
                 تسجيل الدخول
               </button>
@@ -368,8 +357,7 @@ export default function Header({
               {/* Core Get Started CTA */}
               <button
                 onClick={() => onNavigate('signup')}
-                className="hidden sm:flex items-center gap-2 text-white px-6 py-2.5 rounded-full font-bold text-xs md:text-sm cursor-pointer"
-                style={{ backgroundColor: '#3544e1' }}
+                className="btn-sanad hidden sm:flex items-center gap-2 px-6 py-2.5 rounded-full font-bold text-xs md:text-sm cursor-pointer"
               >
                 <span>إنشاء حساب</span>
               </button>
@@ -384,7 +372,7 @@ export default function Header({
                 ? 'bg-blue-50 dark:bg-blue-950/50 ring-blue-500/30 text-blue-600 dark:text-blue-400'
                 : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 ring-slate-900/[0.08] dark:ring-white/10 text-slate-600 dark:text-slate-300'
             }`}
-            aria-label="Toggle Mobile Menu"
+            aria-label={isMobileMenuOpen ? "إغلاق القائمة" : "فتح القائمة"}
             aria-expanded={isMobileMenuOpen}
           >
             {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
